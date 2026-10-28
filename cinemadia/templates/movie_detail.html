@@ -1,0 +1,912 @@
+{% extends 'base_with_nav.html' %}
+{% load static %}
+
+{% block title %}🎬 {{ movie.title }} - Cinemadia.com{% endblock %}
+{% block description %}{{ movie.title }} - {{ movie.description|truncatewords:20 }}{% endblock %}
+
+{% block extra_css %}
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #ec4899;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-main: #0a0e27;
+            --bg-card: #141829;
+            --bg-hover: #1e2139;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border: #1f2937;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, var(--bg-main) 0%, #050817 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        body:before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 30px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .movie-header {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .movie-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .poster-section {
+            position: sticky;
+            top: 20px;
+        }
+
+        .poster {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .poster img {
+            width: 100%;
+            height: 450px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .poster-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            display: flex;
+            align-items: flex-end;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .poster:hover .poster-overlay {
+            opacity: 1;
+        }
+
+        .movie-info h1 {
+            font-size: 36px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .movie-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .movie-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .rating {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, var(--accent), #f97316);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: 900;
+            font-size: 16px;
+        }
+
+        .badges {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .badge {
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        .badge.badge-hd {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+        }
+
+        .play-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 32px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+            margin-top: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .play-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(139, 92, 246, 0.6);
+        }
+
+        .play-btn i {
+            font-size: 20px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        /* =========== VIDEO PLAYER =========== */
+        .player-wrap {
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            padding-top: 56.25%;
+        }
+
+        .player-wrap video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .custom-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .player-wrap:hover .custom-controls,
+        .player-wrap.controls-visible .custom-controls {
+            opacity: 1;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress-filled {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .control-buttons {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: space-between;
+        }
+
+        .control-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .control-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            transition: all 0.3s;
+            border-radius: 8px;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.1);
+            transform: scale(1.1);
+        }
+
+        .control-btn.play-pause {
+            font-size: 24px;
+        }
+
+        .time-display {
+            font-size: 14px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .movie-description {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .info-item {
+            background: var(--bg-hover);
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .info-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn-secondary {
+            background: var(--bg-hover);
+            border: 2px solid var(--border);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-main);
+            border-color: var(--primary);
+        }
+
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .related-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .related-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.3);
+            border-color: var(--primary);
+        }
+
+        .related-card img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+        }
+
+        .related-body {
+            padding: 15px;
+        }
+
+        .related-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .related-meta {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        @media (max-width: 968px) {
+            .movie-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .poster-section {
+                position: relative;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .related-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .movie-header {
+                padding: 20px;
+            }
+
+            .movie-info h1 {
+                font-size: 24px;
+            }
+
+            .movie-grid {
+                gap: 20px;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <a href="{% url 'cinemadia:home' %}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Bosh sahifaga qaytish
+        </a>
+
+        <div class="movie-header">
+            <div class="movie-grid">
+                <!-- LEFT: Poster -->
+                <div class="poster-section">
+                    <div class="poster">
+                        <img src="{{ movie.get_poster }}" alt="{{ movie.title }}">
+                        <div class="poster-overlay">
+                            <i class="fas fa-play-circle" style="font-size: 48px; color: white;"></i>
+                        </div>
+                    </div>
+
+                    <div class="badges">
+                        <span class="badge badge-hd"><i class="fas fa-hd-video"></i> HD</span>
+                        <span class="badge"><i class="fas fa-closed-captioning"></i> Uzbekcha</span>
+                        <span class="badge"><i class="fas fa-clock"></i> {{ movie.duration }}</span>
+                    </div>
+
+                    <button class="play-btn" onclick="scrollToPlayer();">
+                        <i class="fas fa-play"></i> Filmni tomosha qilish
+                    </button>
+
+                    <div class="actions">
+                        <button class="btn-secondary" id="favoriteBtn" data-movie-id="{{ movie.id }}">
+                            <i class="fas fa-heart"></i>
+                            <span id="favoriteBtnText">Sevimlilar</span>
+                        </button>
+                        <button class="btn-secondary" id="watchlistBtn" data-movie-id="{{ movie.id }}">
+                            <i class="fas fa-list"></i>
+                            <span id="watchlistBtnText">Ko'rish ro'yxati</span>
+                        </button>
+                        <a class="btn-secondary" href="{% url 'cinemadia:add_review' movie.id %}">
+                            <i class="fas fa-comment"></i> Fikr qoldirish
+                        </a>
+                        <button class="btn-secondary">
+                            <i class="fas fa-share-alt"></i> Ulashish
+                        </button>
+                    </div>
+                </div>
+
+                <!-- RIGHT: Info -->
+                <div class="movie-info">
+                    <h1>{{ movie.title }}</h1>
+
+                    <div class="movie-meta">
+                        <span><i class="fas fa-calendar"></i> {{ movie.year }}</span>
+                        <span><i class="fas fa-film"></i> {{ movie.genre }}</span>
+                        <span class="rating">
+                            <i class="fas fa-star"></i> {{ movie.rating }}
+                        </span>
+                    </div>
+
+                    <p class="movie-description">
+                        {{ movie.description }}
+                    </p>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Rejissyor</div>
+                            <div class="info-value">{{ movie.director }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Aktyorlar</div>
+                            <div class="info-value">{{ movie.actors|default:"—" }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Janr</div>
+                            <div class="info-value">{{ movie.genre }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Davomiyligi</div>
+                            <div class="info-value">{{ movie.duration }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Section -->
+        <div class="card" id="playerSection">
+            <h2 class="section-title">
+                <i class="fas fa-play-circle"></i> Filmni Tomosha Qiling
+            </h2>
+
+            <div class="player-wrap" id="playerWrap">
+                <video id="videoPlayer" preload="metadata" poster="{{ movie.get_poster }}">
+                    {% if movie.video_file %}
+                        <source src="{{ movie.video_file.url }}" type="video/mp4">
+                    {% elif movie.trailer_url %}
+                        <source src="{{ movie.trailer_url }}" type="video/mp4">
+                    {% endif %}
+                    Brauzeringiz video tegini qo'llab-quvvatlamaydi.
+                </video>
+
+                <div class="custom-controls">
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress-filled" id="progressFilled"></div>
+                    </div>
+
+                    <div class="control-buttons">
+                        <div class="control-left">
+                            <button class="control-btn play-pause" id="playPauseBtn">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <button class="control-btn" id="rewindBtn" title="15 sekund orqaga">
+                                <i class="fas fa-backward"></i>
+                            </button>
+                            <button class="control-btn" id="forwardBtn" title="15 sekund oldinga">
+                                <i class="fas fa-forward"></i>
+                            </button>
+                            <span class="time-display" id="timeDisplay">0:00 / 0:00</span>
+                        </div>
+
+                        <div class="control-right">
+                            <div class="volume-control">
+                                <button class="control-btn" id="muteBtn">
+                                    <i class="fas fa-volume-up"></i>
+                                </button>
+                                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100">
+                            </div>
+                            <button class="control-btn" id="pipBtn" title="Picture-in-Picture">
+                                <i class="fas fa-external-link-alt"></i>
+                            </button>
+                            <button class="control-btn" id="fullscreenBtn" title="To'liq ekran">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Related Movies -->
+        <div class="card">
+            <h2 class="section-title">
+                <i class="fas fa-film"></i> O'xshash Filmlar
+            </h2>
+
+            <div class="related-grid">
+                {% for related in movies|slice:":6" %}
+                <a href="{% url 'cinemadia:movie_detail' related.slug %}" class="related-card">
+                    <img src="{{ related.get_poster }}" alt="{{ related.title }}">
+                    <div class="related-body">
+                        <div class="related-title">{{ related.title }}</div>
+                        <div class="related-meta">
+                            <i class="fas fa-calendar"></i> {{ related.year }} • 
+                            <i class="fas fa-star"></i> {{ related.rating }}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <footer>
+            <p>
+                <i class="fas fa-film" style="color: var(--primary);"></i>
+                &copy; 2025 Cinemadia.com - Eng Yaxshi Onlayn Kinoteatr
+            </p>
+            <p style="margin-top: 10px;">
+                <i class="fas fa-heart" style="color: #ec4899;"></i> 
+                Barcha huquqlar himoyalangan
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // CSRF helper
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        // Video Player
+        const video = document.getElementById('videoPlayer');
+        const playerWrap = document.getElementById('playerWrap');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const rewindBtn = document.getElementById('rewindBtn');
+        const forwardBtn = document.getElementById('forwardBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFilled = document.getElementById('progressFilled');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const muteBtn = document.getElementById('muteBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const pipBtn = document.getElementById('pipBtn');
+
+        // Play/Pause
+        function togglePlay() {
+            if (video.paused) {
+                video.play();
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                video.pause();
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        }
+
+        playPauseBtn.addEventListener('click', togglePlay);
+        video.addEventListener('click', togglePlay);
+
+        // Rewind 15 seconds
+        rewindBtn.addEventListener('click', () => {
+            video.currentTime -= 15;
+        });
+
+        // Forward 15 seconds
+        forwardBtn.addEventListener('click', () => {
+            video.currentTime += 15;
+        });
+
+        // Update progress bar
+        video.addEventListener('timeupdate', () => {
+            const percent = (video.currentTime / video.duration) * 100;
+            progressFilled.style.width = percent + '%';
+            
+            const currentMinutes = Math.floor(video.currentTime / 60);
+            const currentSeconds = Math.floor(video.currentTime % 60);
+            const durationMinutes = Math.floor(video.duration / 60);
+            const durationSeconds = Math.floor(video.duration % 60);
+            
+            timeDisplay.textContent = `${currentMinutes}:${currentSeconds.toString().padStart(2, '0')} / ${durationMinutes}:${durationSeconds.toString().padStart(2, '0')}`;
+        });
+
+        // Seek
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            video.currentTime = percent * video.duration;
+        });
+
+        // Volume
+        volumeSlider.addEventListener('input', (e) => {
+            video.volume = e.target.value / 100;
+            updateVolumeIcon();
+        });
+
+        // Mute
+        muteBtn.addEventListener('click', () => {
+            video.muted = !video.muted;
+            updateVolumeIcon();
+        });
+
+        function updateVolumeIcon() {
+            if (video.muted || video.volume === 0) {
+                muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+            } else if (video.volume < 0.5) {
+                muteBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
+            } else {
+                muteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            }
+        }
+
+        // Fullscreen
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                playerWrap.requestFullscreen();
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                document.exitFullscreen();
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
+
+        // Picture in Picture
+        pipBtn.addEventListener('click', async () => {
+            try {
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                } else {
+                    await video.requestPictureInPicture();
+                }
+            } catch (error) {
+                console.log('PiP not supported');
+            }
+        });
+
+        // Show controls on mouse move
+        let controlsTimeout;
+        playerWrap.addEventListener('mousemove', () => {
+            playerWrap.classList.add('controls-visible');
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(() => {
+                if (!video.paused) {
+                    playerWrap.classList.remove('controls-visible');
+                }
+            }, 3000);
+        });
+
+        // Scroll to player
+        function scrollToPlayer() {
+            document.getElementById('playerSection').scrollIntoView({
+                behavior: 'smooth',
+                block: 'center'
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            
+            switch(e.key) {
+                case ' ':
+                    e.preventDefault();
+                    togglePlay();
+                    break;
+                case 'ArrowLeft':
+                    video.currentTime -= 5;
+                    break;
+                case 'ArrowRight':
+                    video.currentTime += 5;
+                    break;
+                case 'ArrowUp':
+                    video.volume = Math.min(video.volume + 0.1, 1);
+                    volumeSlider.value = video.volume * 100;
+                    updateVolumeIcon();
+                    break;
+                case 'ArrowDown':
+                    video.volume = Math.max(video.volume - 0.1, 0);
+                    volumeSlider.value = video.volume * 100;
+                    updateVolumeIcon();
+                    break;
+                case 'f':
+                    fullscreenBtn.click();
+                    break;
+                case 'm':
+                    muteBtn.click();
+                    break;
+            }
+        });
+
+        // Console message
+        console.log('%c🎬 CINEMADIA MOVIE', 'color: #8b5cf6; font-size: 24px; font-weight: bold;');
+        console.log('%cFilmdan bahramand bo\'ling!', 'color: #ec4899; font-size: 14px;');
+
+        // Favorite & Watchlist AJAX
+        const favoriteBtn = document.getElementById('favoriteBtn');
+        const watchlistBtn = document.getElementById('watchlistBtn');
+        const favoriteBtnText = document.getElementById('favoriteBtnText');
+        const watchlistBtnText = document.getElementById('watchlistBtnText');
+        const csrfToken = getCookie('csrftoken');
+
+        function requireAuthRedirect() {
+            window.location.href = "{% url 'cinemadia:login' %}?next={{ request.path|urlencode }}";
+        }
+
+        async function postToggle(url) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            if (!response.ok) throw new Error('Server error');
+            return await response.json();
+        }
+
+        if (favoriteBtn) {
+            favoriteBtn.addEventListener('click', async () => {
+                {% if not user.is_authenticated %}
+                requireAuthRedirect();
+                return;
+                {% endif %}
+                const movieId = favoriteBtn.getAttribute('data-movie-id');
+                favoriteBtn.disabled = true;
+                try {
+                    const data = await postToggle('{% url "cinemadia:toggle_favorite" 0 %}'.replace('0', movieId));
+                    favoriteBtnText.textContent = data.is_favorite ? "Sevimlilardan o'chirish" : "Sevimlilar";
+                } catch (e) {
+                    alert("Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.");
+                } finally {
+                    favoriteBtn.disabled = false;
+                }
+            });
+        }
+
+        if (watchlistBtn) {
+            watchlistBtn.addEventListener('click', async () => {
+                {% if not user.is_authenticated %}
+                requireAuthRedirect();
+                return;
+                {% endif %}
+                const movieId = watchlistBtn.getAttribute('data-movie-id');
+                watchlistBtn.disabled = true;
+                try {
+                    const data = await postToggle('{% url "cinemadia:toggle_watchlist" 0 %}'.replace('0', movieId));
+                    watchlistBtnText.textContent = data.in_watchlist ? "Ro'yxatdan o'chirish" : "Ko'rish ro'yxati";
+                } catch (e) {
+                    alert("Xatolik yuz berdi. Iltimos, qayta urinib ko'ring.");
+                } finally {
+                    watchlistBtn.disabled = false;
+                }
+            });
+        }
+    </script>
+{% endblock %}

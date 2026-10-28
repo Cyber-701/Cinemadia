@@ -1,0 +1,452 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinemadia Admin · Film formasi</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            primary: '#2563eb',
+            secondary: '#4f46e5',
+            accent: '#0ea5e9'
+          },
+          boxShadow: {
+            glow: '0 20px 45px -18px rgba(79, 70, 229, .6)'
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.3s ease-in',
+            'slide-up': 'slideUp 0.4s ease-out',
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(10px)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' }
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    .form-field-focus:focus {
+      @apply ring-2 ring-primary/40 border-primary transition-all duration-200;
+    }
+    .loading-spinner {
+      border: 2px solid rgba(59, 130, 246, 0.3);
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-100">
+  <div class="min-h-screen">
+    <header class="sticky top-0 z-30 border-b border-slate-800/60 bg-slate-950/80 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+        <div>
+          <p class="text-[11px] uppercase tracking-[0.35em] text-slate-500">Cinemadia admin</p>
+          <h1 class="text-2xl font-semibold">{% if movie %}Filmni tahrirlash{% else %}Yangi film qo‘shish{% endif %}</h1>
+        </div>
+        <a href="{% url 'cinemadia:admin_panel' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-700/70 px-4 py-2 text-sm text-slate-300 transition hover:border-primary/40 hover:text-primary">
+          <i class="fa-solid fa-arrow-left"></i>
+          Panelga qaytish
+        </a>
+      </div>
+    </header>
+
+    <main class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8 lg:flex-row animate-fade-in">
+      <section class="w-full rounded-3xl border border-slate-800/60 bg-slate-900/80 p-6 sm:p-8 text-sm shadow-xl animate-slide-up">
+        <form method="post" enctype="multipart/form-data" class="space-y-8" id="movieForm">
+          {% csrf_token %}
+          {% if movie %}
+            <input type="hidden" name="id" value="{{ movie.id }}">
+          {% endif %}
+
+          {% if messages %}
+            <div class="space-y-2">
+              {% for message in messages %}
+                <div class="rounded-lg border px-4 py-3 text-xs {% if message.tags == 'success' %}border-emerald-400/40 bg-emerald-500/10 text-emerald-200{% else %}border-rose-400/30 bg-rose-500/10 text-rose-200{% endif %}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% if form.non_field_errors %}
+            <div class="rounded-xl border border-rose-400/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-200">
+              {{ form.non_field_errors }}
+            </div>
+          {% endif %}
+
+          <div class="grid gap-6 md:grid-cols-2">
+            <div class="space-y-2">
+              <label for="{{ form.title.id_for_label }}" class="font-semibold text-slate-200">{{ form.title.label }} <span class="text-rose-400">*</span></label>
+              {{ form.title }}
+              {% if form.title.errors %}<p class="text-xs text-rose-300">{{ form.title.errors|join:', ' }}</p>{% endif %}
+            </div>
+
+            <div class="space-y-2">
+              <label for="{{ form.category.id_for_label }}" class="font-semibold text-slate-200">{{ form.category.label }} <span class="text-rose-400">*</span></label>
+              {{ form.category }}
+              {% if form.category.errors %}<p class="text-xs text-rose-300">{{ form.category.errors|join:', ' }}</p>{% endif %}
+            </div>
+
+            <div class="space-y-2">
+              <label for="{{ form.genre.id_for_label }}" class="font-semibold text-slate-200">{{ form.genre.label }} <span class="text-rose-400">*</span></label>
+              {{ form.genre }}
+              {% if form.genre.errors %}<p class="text-xs text-rose-300">{{ form.genre.errors|join:', ' }}</p>{% endif %}
+            </div>
+
+            <div class="space-y-2">
+              <label for="{{ form.rating.id_for_label }}" class="font-semibold text-slate-200">{{ form.rating.label }} <span class="text-rose-400">*</span></label>
+              {{ form.rating }}
+              <p class="text-xs text-slate-500">0 dan 10 gacha qiymat kiriting.</p>
+              {% if form.rating.errors %}<p class="text-xs text-rose-300">{{ form.rating.errors|join:', ' }}</p>{% endif %}
+            </div>
+
+            <div class="space-y-2">
+              <label for="{{ form.year.id_for_label }}" class="font-semibold text-slate-200">{{ form.year.label }}</label>
+              {{ form.year }}
+              {% if form.year.errors %}<p class="text-xs text-rose-300">{{ form.year.errors|join:', ' }}</p>{% endif %}
+            </div>
+
+            <div class="space-y-2">
+              <label for="{{ form.status.id_for_label }}" class="font-semibold text-slate-200">{{ form.status.label }}</label>
+              {{ form.status }}
+              {% if form.status.errors %}<p class="text-xs text-rose-300">{{ form.status.errors|join:', ' }}</p>{% endif %}
+            </div>
+
+            <div class="space-y-2">
+              <label for="{{ form.duration.id_for_label }}" class="font-semibold text-slate-200">{{ form.duration.label }}</label>
+              {{ form.duration }}
+              {% if form.duration.errors %}<p class="text-xs text-rose-300">{{ form.duration.errors|join:', ' }}</p>{% endif %}
+            </div>
+
+            <div class="space-y-2">
+              <label for="{{ form.director.id_for_label }}" class="font-semibold text-slate-200">{{ form.director.label }}</label>
+              {{ form.director }}
+              {% if form.director.errors %}<p class="text-xs text-rose-300">{{ form.director.errors|join:', ' }}</p>{% endif %}
+            </div>
+
+            <div class="space-y-2 md:col-span-2">
+              <label for="{{ form.actors.id_for_label }}" class="font-semibold text-slate-200">{{ form.actors.label }}</label>
+              {{ form.actors }}
+              {% if form.actors.errors %}<p class="text-xs text-rose-300">{{ form.actors.errors|join:', ' }}</p>{% endif %}
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <label for="{{ form.description.id_for_label }}" class="font-semibold text-slate-200 flex items-center justify-between">
+              {{ form.description.label }}
+              <span class="text-xs text-slate-500" id="synopsisCounter">0/320</span>
+            </label>
+            {{ form.description }}
+            {% if form.description.errors %}<p class="text-xs text-rose-300">{{ form.description.errors|join:', ' }}</p>{% endif %}
+          </div>
+
+          <div class="flex items-center gap-3 rounded-2xl border border-slate-700/70 bg-slate-900/60 px-4 py-3">
+            {{ form.is_featured }}
+            <label for="{{ form.is_featured.id_for_label }}" class="text-sm">{{ form.is_featured.label }}</label>
+            {% if form.is_featured.errors %}<p class="text-xs text-rose-300">{{ form.is_featured.errors|join:', ' }}</p>{% endif %}
+          </div>
+
+          <div class="grid gap-6 lg:grid-cols-2">
+            <div class="space-y-3">
+              <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-image text-primary"></i>
+                Poster (3:4)
+              </h2>
+              
+              <!-- Poster Preview -->
+              <div class="relative rounded-xl border-2 border-dashed border-slate-700/60 bg-slate-900/40 overflow-hidden" style="aspect-ratio: 3/4;">
+                <div id="posterPreview" class="w-full h-full flex items-center justify-center">
+                  {% if movie.get_poster %}
+                    <img src="{{ movie.get_poster }}" alt="Poster" class="w-full h-full object-cover">
+                  {% else %}
+                    <div class="text-center text-slate-500">
+                      <i class="fa-solid fa-image text-4xl mb-2"></i>
+                      <p class="text-xs">Poster yuklanmagan</p>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <label for="{{ form.poster_url.id_for_label }}" class="text-xs font-semibold text-slate-400">URL</label>
+                {{ form.poster_url }}
+                {% if form.poster_url.errors %}<p class="text-xs text-rose-300">{{ form.poster_url.errors|join:', ' }}</p>{% endif %}
+              </div>
+              <div class="space-y-2">
+                <label for="{{ form.poster_file.id_for_label }}" class="text-xs font-semibold text-slate-400">Fayl</label>
+                {{ form.poster_file }}
+                <p class="text-xs text-slate-500">Maks: 1.5MB (jpg/png/webp)</p>
+                {% if form.poster_file.errors %}<p class="text-xs text-rose-300">{{ form.poster_file.errors|join:', ' }}</p>{% endif %}
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-panorama text-accent"></i>
+                Banner (16:9)
+              </h2>
+              
+              <!-- Banner Preview -->
+              <div class="relative rounded-xl border-2 border-dashed border-slate-700/60 bg-slate-900/40 overflow-hidden" style="aspect-ratio: 16/9;">
+                <div id="bannerPreview" class="w-full h-full flex items-center justify-center">
+                  {% if movie.get_banner %}
+                    <img src="{{ movie.get_banner }}" alt="Banner" class="w-full h-full object-cover">
+                  {% else %}
+                    <div class="text-center text-slate-500">
+                      <i class="fa-solid fa-panorama text-4xl mb-2"></i>
+                      <p class="text-xs">Banner yuklanmagan</p>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <label for="{{ form.banner_url.id_for_label }}" class="text-xs font-semibold text-slate-400">URL</label>
+                {{ form.banner_url }}
+                {% if form.banner_url.errors %}<p class="text-xs text-rose-300">{{ form.banner_url.errors|join:', ' }}</p>{% endif %}
+              </div>
+              <div class="space-y-2">
+                <label for="{{ form.banner_file.id_for_label }}" class="text-xs font-semibold text-slate-400">Fayl</label>
+                {{ form.banner_file }}
+                <p class="text-xs text-slate-500">Maks: 2MB - Katta premyeralar uchun</p>
+                {% if form.banner_file.errors %}<p class="text-xs text-rose-300">{{ form.banner_file.errors|join:', ' }}</p>{% endif %}
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-film text-secondary"></i>
+                Treyler
+              </h2>
+              <div class="space-y-2">
+                <label for="{{ form.trailer_url.id_for_label }}" class="text-xs font-semibold text-slate-400">URL</label>
+                {{ form.trailer_url }}
+                {% if form.trailer_url.errors %}<p class="text-xs text-rose-300">{{ form.trailer_url.errors|join:', ' }}</p>{% endif %}
+              </div>
+              <div class="space-y-2">
+                <label for="{{ form.trailer_file.id_for_label }}" class="text-xs font-semibold text-slate-400">Fayl</label>
+                {{ form.trailer_file }}
+                <p class="text-xs text-slate-500">Maks: 150MB (mp4/webm)</p>
+                {% if form.trailer_file.errors %}<p class="text-xs text-rose-300">{{ form.trailer_file.errors|join:', ' }}</p>{% endif %}
+              </div>
+            </div>
+
+            <div class="space-y-3 lg:col-span-2">
+              <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wide">To‘liq film</h2>
+              <div class="grid gap-4 md:grid-cols-2">
+                <div class="space-y-2">
+                  <label for="{{ form.video_url.id_for_label }}" class="text-xs font-semibold text-slate-400">URL</label>
+                  {{ form.video_url }}
+                  {% if form.video_url.errors %}<p class="text-xs text-rose-300">{{ form.video_url.errors|join:', ' }}</p>{% endif %}
+                </div>
+                <div class="space-y-2">
+                  <label for="{{ form.video_file.id_for_label }}" class="text-xs font-semibold text-slate-400">Fayl</label>
+                  {{ form.video_file }}
+                  <p class="text-xs text-slate-500">Maks: 700MB</p>
+                  {% if form.video_file.errors %}<p class="text-xs text-rose-300">{{ form.video_file.errors|join:', ' }}</p>{% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-4 border-t border-slate-800/60 pt-6 text-xs text-slate-500">
+            <p class="flex items-center gap-2">
+              <i class="fa-solid fa-shield-check text-emerald-400"></i>
+              Ma’lumotlar xavfsiz tarzda saqlanadi.
+            </p>
+            <div class="flex items-center gap-3 text-sm">
+              <a href="{% url 'cinemadia:admin_panel' %}" class="inline-flex items-center gap-2 rounded-xl border border-slate-700/70 px-4 py-2 text-slate-300 transition hover:border-primary/40 hover:text-primary">Bekor qilish</a>
+              <button type="submit" id="submitBtn" class="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2 font-semibold text-white shadow-glow transition hover:bg-primary/90 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-floppy-disk" id="submitIcon"></i>
+                <span id="submitText">Saqlash</span>
+                <div class="loading-spinner hidden" id="loadingSpinner"></div>
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <aside class="w-full rounded-3xl border border-slate-800/60 bg-slate-900/80 p-6 sm:p-8 text-sm text-slate-300 lg:w-80 shadow-xl animate-slide-up" style="animation-delay: 0.1s;">
+        <div class="space-y-4">
+          <div>
+            <h2 class="text-sm font-semibold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <i class="fa-solid fa-lightbulb text-accent"></i>
+              Tezkor eslatmalar
+            </h2>
+          </div>
+          <ul class="space-y-3 text-xs text-slate-400">
+            <li class="flex items-start gap-2 hover:text-slate-300 transition">
+              <i class="fa-solid fa-circle-check text-primary mt-0.5"></i>
+              <span><strong>Poster:</strong> 3:4 nisbat (masalan: 600x800px)</span>
+            </li>
+            <li class="flex items-start gap-2 hover:text-slate-300 transition">
+              <i class="fa-solid fa-circle-check text-accent mt-0.5"></i>
+              <span><strong>Banner:</strong> 16:9 nisbat (masalan: 1920x1080px) - Katta premyeralar uchun</span>
+            </li>
+            <li class="flex items-start gap-2 hover:text-slate-300 transition">
+              <i class="fa-solid fa-circle-check text-primary mt-0.5"></i>
+              <span>Kelajakdagi yil tanlansa, statusni "Scheduled"ga o'zgartiring</span>
+            </li>
+            <li class="flex items-start gap-2 hover:text-slate-300 transition">
+              <i class="fa-solid fa-circle-check text-primary mt-0.5"></i>
+              <span>Aktyorlar maydonida ismlarni vergul bilan ajrating</span>
+            </li>
+            <li class="flex items-start gap-2 hover:text-slate-300 transition">
+              <i class="fa-solid fa-circle-check text-primary mt-0.5"></i>
+              <span>Banner saytda katta ko'rinadi, poster esa kartochkalarda</span>
+            </li>
+          </ul>
+          <div class="pt-4 border-t border-slate-800/60">
+            <div class="flex items-center gap-2 text-xs text-slate-500">
+              <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow"></div>
+              <span>Auto-save faol</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="https://kit.fontawesome.com/4f14ebd123.js" crossorigin="anonymous"></script>
+  <script>
+    // Synopsis counter
+    const synopsis = document.getElementById('{{ form.description.id_for_label }}');
+    const counter = document.getElementById('synopsisCounter');
+    if (synopsis && counter) {
+      const updateCounter = () => {
+        const len = synopsis.value.length;
+        counter.textContent = `${len}/320`;
+        if (len > 320) {
+          counter.classList.add('text-rose-300');
+          counter.classList.remove('text-slate-500');
+        } else {
+          counter.classList.remove('text-rose-300');
+          counter.classList.add('text-slate-500');
+        }
+      };
+      synopsis.addEventListener('input', updateCounter);
+      updateCounter();
+    }
+
+    // Form submission with loading state
+    const form = document.getElementById('movieForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitIcon = document.getElementById('submitIcon');
+    const submitText = document.getElementById('submitText');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+
+    if (form && submitBtn) {
+      form.addEventListener('submit', function(e) {
+        submitBtn.disabled = true;
+        submitIcon.classList.add('hidden');
+        submitText.textContent = 'Saqlanmoqda...';
+        loadingSpinner.classList.remove('hidden');
+      });
+    }
+
+    // Auto-save draft to localStorage
+    let autoSaveTimeout;
+    const formFields = form?.querySelectorAll('input, select, textarea');
+    
+    formFields?.forEach(field => {
+      field.addEventListener('input', () => {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+          const formData = new FormData(form);
+          const data = {};
+          formData.forEach((value, key) => {
+            data[key] = value;
+          });
+          localStorage.setItem('movie_form_draft', JSON.stringify(data));
+          console.log('Draft saved');
+        }, 2000);
+      });
+    });
+
+    // Load draft on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const draft = localStorage.getItem('movie_form_draft');
+      if (draft && !document.querySelector('input[name="id"]')) {
+        const data = JSON.parse(draft);
+        Object.keys(data).forEach(key => {
+          const field = form?.querySelector(`[name="${key}"]`);
+          if (field && field.value === '') {
+            field.value = data[key];
+          }
+        });
+      }
+    });
+
+    // Clear draft after successful submission
+    form?.addEventListener('submit', () => {
+      setTimeout(() => {
+        localStorage.removeItem('movie_form_draft');
+      }, 1000);
+    });
+
+    // Add smooth focus effects
+    document.querySelectorAll('input, select, textarea').forEach(field => {
+      field.classList.add('form-field-focus');
+    });
+
+    // Image preview functionality
+    function setupImagePreview(fileInputId, urlInputId, previewId, placeholderIcon) {
+      const fileInput = document.getElementById(fileInputId);
+      const urlInput = document.getElementById(urlInputId);
+      const preview = document.getElementById(previewId);
+
+      if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+              preview.innerHTML = `<img src="${event.target.result}" alt="Preview" class="w-full h-full object-cover animate-fade-in">`;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+
+      if (urlInput) {
+        urlInput.addEventListener('blur', function() {
+          const url = this.value.trim();
+          if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+            preview.innerHTML = `<img src="${url}" alt="Preview" class="w-full h-full object-cover animate-fade-in" onerror="this.parentElement.innerHTML='<div class=\\'text-center text-rose-400\\'><i class=\\'fa-solid fa-exclamation-triangle text-3xl mb-2\\'></i><p class=\\'text-xs\\'>Rasm yuklanmadi</p></div>'">`;
+          }
+        });
+      }
+    }
+
+    // Setup previews for poster and banner
+    setupImagePreview('{{ form.poster_file.id_for_label }}', '{{ form.poster_url.id_for_label }}', 'posterPreview', 'fa-image');
+    setupImagePreview('{{ form.banner_file.id_for_label }}', '{{ form.banner_url.id_for_label }}', 'bannerPreview', 'fa-panorama');
+  </script>
+</body>
+</html>

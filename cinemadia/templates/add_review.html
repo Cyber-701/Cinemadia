@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sharh qo'shish - {{ movie.title }}</title>
+    <style>
+        body { margin:0; font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:#0a0e27; color:#f9fafb; }
+        .container { max-width: 700px; margin: 0 auto; padding: 24px; }
+        .card { background:#141829; border:1px solid #1f2937; border-radius:16px; padding:20px; box-shadow:0 10px 30px rgba(0,0,0,.3) }
+        .title { font-size:22px; font-weight:900; margin: 0 0 16px }
+        label { display:block; font-size:14px; color:#e5e7eb; margin:12px 0 6px; font-weight:700 }
+        input[type="number"], textarea { width:100%; padding:12px 14px; border-radius:12px; background:#0a0e27; color:#fff; border:2px solid #1f2937; outline:none; }
+        input:focus, textarea:focus { border-color:#8b5cf6; box-shadow:0 0 0 4px rgba(139,92,246,.12) }
+        .actions { display:flex; gap:10px; margin-top:16px }
+        .btn { padding:12px 18px; border:none; border-radius:12px; font-weight:800; cursor:pointer }
+        .btn-primary { background:#8b5cf6; color:#fff }
+        .btn-secondary { background:#1e2139; color:#fff; border:1px solid #2b2f4a }
+        .back { color:#9ca3af; text-decoration:none; display:inline-flex; align-items:center; gap:8px; margin-bottom:12px; font-weight:700 }
+        .errorlist { background:#42202a; border:1px solid #f43f5e; color:#fecdd3; padding:10px; border-radius:10px; list-style:disc; margin:0 0 12px 18px }
+    </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="{% url 'cinemadia:movie_detail' movie.slug %}">⟵ {{ movie.title }}</a>
+    <div class="card">
+      <h1 class="title">{{ movie.title }} uchun sharh qoldiring</h1>
+      <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <label for="id_rating">Baho (1-10)</label>
+        {{ form.rating }}
+        <label for="id_comment">Izoh</label>
+        {{ form.comment }}
+        <div class="actions">
+          <button type="submit" class="btn btn-primary">Yuborish</button>
+          <a href="{% url 'cinemadia:movie_detail' movie.slug %}" class="btn btn-secondary">Bekor qilish</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
+

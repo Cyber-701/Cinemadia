@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ro'yxatdan o'tish - Cinemadia</title>
+    <meta name="google-signin-client_id" content="556331998780-jhmmulhgm2s2fgrqqln50vmtp1fh41vc.apps.googleusercontent.com">
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #ec4899;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-main: #0a0e27;
+            --bg-card: #141829;
+            --bg-hover: #1e2139;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border: #1f2937;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, var(--bg-main) 0%, #050817 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        body:before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .register-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .logo:before {
+            content: '🎬 ';
+        }
+
+        .tagline {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .register-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .card-header h2 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .card-header p {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--bg-hover);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+            background: var(--bg-main);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .password-toggle {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .form-errors {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .form-help {
+            list-style: none;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .form-help li {
+            padding-left: 20px;
+            position: relative;
+            margin-bottom: 4px;
+        }
+
+        .form-help li:before {
+            content: '•';
+            position: absolute;
+            left: 5px;
+            color: var(--primary);
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(139, 92, 246, 0.5);
+        }
+
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            position: relative;
+        }
+
+        .divider:before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider span {
+            background: var(--bg-card);
+            padding: 0 15px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            position: relative;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .google-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .google-note {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .social-btn:hover {
+            background: var(--bg-main);
+            border-color: var(--primary);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+        }
+
+        .login-link p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .login-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .login-link a:hover {
+            color: var(--secondary);
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(139, 92, 246, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .feature {
+            text-align: center;
+        }
+
+        .feature i {
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .feature h4 {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .feature p {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 480px) {
+            .register-card {
+                padding: 30px 20px;
+            }
+
+            .logo {
+                font-size: 36px;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+
+            .social-login {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="logo-section">
+            <div class="logo">CINEMADIA</div>
+            <p class="tagline">Eng yaxshi onlayn kinoteatr</p>
+        </div>
+
+        <div class="register-card">
+            <div class="card-header">
+                <h2>Ro'yxatdan o'tish</h2>
+                <p>Hisob yarating va barcha imkoniyatlardan foydalaning</p>
+            </div>
+
+            {% if form.errors %}
+                <div class="form-errors">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <p class="error-message">{{ error }}</p>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'cinemadia:register' %}">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="id_username">Foydalanuvchi nomi</label>
+                    {{ form.username }}
+                    {% if form.username.help_text %}
+                        <ul class="form-help">
+                            <li>150 ta belgi yoki kamroq. Faqat harflar, raqamlar va @/./+/-/_ belgilar.</li>
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_email">Email</label>
+                    {{ form.email }}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_first_name">Ism (ixtiyoriy)</label>
+                    {{ form.first_name }}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_last_name">Familiya (ixtiyoriy)</label>
+                    {{ form.last_name }}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_password1">Parol</label>
+                    <div class="password-toggle">
+                        {{ form.password1 }}
+                        <button type="button" class="toggle-password" onclick="togglePassword('id_password1')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    {% if form.password1.help_text %}
+                        <ul class="form-help">
+                            <li>Parolingiz kamida 8 ta belgidan iborat bo'lishi kerak</li>
+                            <li>Faqat raqamlardan iborat bo'lmasligi kerak</li>
+                            <li>Shaxsiy ma'lumotlaringiz bilan o'xshash bo'lmasligi kerak</li>
+                        </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label for="id_password2">Parolni tasdiqlang</label>
+                    <div class="password-toggle">
+                        {{ form.password2 }}
+                        <button type="button" class="toggle-password" onclick="togglePassword('id_password2')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-register">
+                    <i class="fas fa-user-plus"></i> Ro'yxatdan o'tish
+                </button>
+            </form>
+
+            <div class="divider">
+                <span>yoki</span>
+            </div>
+
+            <div class="social-login">
+                <div class="google-wrapper">
+                    <div class="g-signin2" data-onsuccess="onGoogleSignIn" data-theme="dark" data-width="260" data-longtitle="true"></div>
+                </div>
+                <a href="#" class="social-btn">
+                    <i class="fab fa-google"></i> Google
+                </a>
+                <a href="#" class="social-btn">
+                    <i class="fab fa-telegram"></i> Telegram
+                </a>
+            </div>
+
+            <p class="google-note">Google orqali ro'yxatdan o'tish vaqtincha demo holatida. Backend bilan integratsiya talab etiladi.</p>
+
+            <div class="login-link">
+                <p>Allaqachon hisobingiz bormi? <a href="{% url 'cinemadia:login' %}">Kirish</a></p>
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <i class="fas fa-heart"></i>
+                    <h4>Sevimlilar</h4>
+                    <p>Filmlarni saqlang</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-star"></i>
+                    <h4>Sharhlar</h4>
+                    <p>Fikr bildiring</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-list"></i>
+                    <h4>Ro'yxatlar</h4>
+                    <p>Ko'rish uchun</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const button = field.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        function onGoogleSignIn(googleUser) {
+            const profile = googleUser.getBasicProfile();
+            console.log('Google foydalanuvchi:', profile.getEmail());
+            // TODO: bu yerda haqiqiy backend integratsiyasi amalga oshiriladi.
+        }
+    </script>
+</body>
+</html>

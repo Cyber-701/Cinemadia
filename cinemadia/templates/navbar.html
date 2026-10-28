@@ -1,0 +1,92 @@
+<!-- Header -->
+<div id="header">
+  <div class="navbar">
+    <a href="{% url 'cinemadia:home' %}" class="cinemadia-logo">
+      <div>
+        <span class="logo-text">CINEMADIA.com</span>
+      </div>
+    </a>
+    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i> Menu</button>
+
+    <ul class="navbar-nav" id="mainMenu">
+      <li><a href="{% url 'cinemadia:home' %}"><i class="fas fa-home"></i> Bosh sahifa</a></li>
+
+      <li class="nav-item">
+        <a href="#" class="dropdown-toggle"><i class="fas fa-film"></i> Kinolar</a>
+        <div class="dropdown-menu">
+          <div class="dropdown-grid">
+            <a href="{% url 'cinemadia:category' 'tarjima_kino' %}">Tarjima kinolar</a>
+            <a href="{% url 'cinemadia:category' 'premyera' %}">Premyeralar</a>
+            <a href="{% url 'cinemadia:category' 'hind' %}">Hind kinolari</a>
+            <a href="{% url 'cinemadia:category' 'multfilm' %}">Multfilmlar</a>
+          </div>
+        </div>
+      </li>
+
+      <li><a href="{% url 'cinemadia:category' 'serial' %}"><i class="fas fa-tv"></i> Seriallar</a></li>
+
+      <li class="nav-item">
+        <a href="#" class="dropdown-toggle"><i class="fas fa-layer-group"></i> Janr</a>
+        <div class="dropdown-menu">
+          <div class="dropdown-grid">
+            <a href="{% url 'cinemadia:genre' 'jangari' %}">Jangari</a>
+            <a href="{% url 'cinemadia:genre' 'drama' %}">Drama</a>
+            <a href="{% url 'cinemadia:genre' 'komediya' %}">Komediya</a>
+            <a href="{% url 'cinemadia:genre' 'melodrama' %}">Melodrama</a>
+            <a href="{% url 'cinemadia:genre' 'sarguzasht' %}">Sarguzasht</a>
+            <a href="{% url 'cinemadia:genre' 'qorquv' %}">Qo'rqinchli</a>
+            <a href="{% url 'cinemadia:genre' 'tarixiy' %}">Tarixiy</a>
+            <a href="{% url 'cinemadia:genre' 'klassika' %}">Klassika</a>
+            <a href="{% url 'cinemadia:genre' 'fantastika' %}">Fantastika</a>
+            <a href="{% url 'cinemadia:genre' 'hayotiy' %}">Hayotiy</a>
+            <a href="{% url 'cinemadia:genre' 'triller' %}">Triller</a>
+            <a href="{% url 'cinemadia:genre' 'detektiv' %}">Detektiv</a>
+            <a href="{% url 'cinemadia:genre' 'hujjatli' %}">Hujjatli</a>
+            <a href="{% url 'cinemadia:genre' 'anime' %}">Anime</a>
+            <a href="{% url 'cinemadia:genre' 'kriminal' %}">Kriminal</a>
+            <a href="{% url 'cinemadia:genre' 'fentezi' %}">Fentezi</a>
+            <a href="{% url 'cinemadia:genre' 'afsona' %}">Afsona</a>
+            <a href="{% url 'cinemadia:genre' 'vester' %}">Vester</a>
+            <a href="{% url 'cinemadia:genre' 'musiqiy' %}">Musiqiy</a>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- User Bar -->
+  <div id="user-bar">
+    <div class="infobar">
+      <ul class="nav-login">
+        {% if user.is_authenticated %}
+          <li>
+            <a href="{% url 'cinemadia:profile' %}" class="nav-login-user">
+              👤 {{ user.email|truncatechars:20 }}
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'cinemadia:logout' %}" class="nav-login-user" style="background: #ff4757;">
+              Chiqish
+            </a>
+          </li>
+        {% else %}
+          <li>
+            <a href="{% url 'cinemadia:login' %}" class="nav-login-user">
+              Kirish
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'cinemadia:register' %}" class="nav-login-user" style="background: var(--primary);">
+              Ro'yxatdan o'tish
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+
+      <form action="{% url 'cinemadia:home' %}" method="get" class="searchbar">
+        <input type="text" name="q" value="{{ query }}" class="searchbar-input" placeholder=" Film yoki serial qidiring...">
+        <button type="submit" class="searchbar-btn"><i class="fas fa-search"></i></button>
+      </form>
+    </div>
+  </div>
+</div>

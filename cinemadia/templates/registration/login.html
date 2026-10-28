@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirish - Cinemadia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="google-signin-client_id" content="556331998780-jhmmulhgm2s2fgrqqln50vmtp1fh41vc.apps.googleusercontent.com">
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <style>
+        :root {
+            --color-primary: #6c5ce7;
+            --color-primary-dark: #5846d6;
+            --color-secondary: #a66dd4;
+            --color-bg: #0f172a;
+            --color-card: rgba(15, 23, 42, 0.78);
+            --color-border: rgba(255, 255, 255, 0.08);
+            --color-text: #e2e8f0;
+            --color-muted: #94a3b8;
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+            --spacing-lg: 32px;
+            --spacing-md: 20px;
+            --spacing-sm: 12px;
+            --shadow-card: 0 28px 80px rgba(15, 23, 42, 0.45);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: radial-gradient(circle at 0% 0%, rgba(108, 92, 231, 0.65), transparent 55%),
+                        radial-gradient(circle at 100% 0%, rgba(63, 94, 251, 0.55), transparent 50%),
+                        linear-gradient(135deg, #020617 0%, #111827 100%);
+            color: var(--color-text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 32px 16px;
+            overflow: hidden;
+        }
+
+        .background-vibes {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .background-vibes span {
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.5;
+            animation: float 12s infinite ease-in-out;
+        }
+
+        .background-vibes .vibe-1 {
+            background: rgba(108, 92, 231, 0.65);
+            top: -40px;
+            left: -60px;
+        }
+
+        .background-vibes .vibe-2 {
+            background: rgba(255, 99, 169, 0.6);
+            bottom: -60px;
+            right: -50px;
+            animation-delay: 2s;
+        }
+
+        .background-vibes .vibe-3 {
+            background: rgba(45, 212, 191, 0.5);
+            top: 50%;
+            left: 80%;
+            animation-delay: 4s;
+        }
+
+        .auth-shell {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 460px;
+        }
+
+        .auth-card {
+            position: relative;
+            background: var(--color-card);
+            border-radius: var(--radius-xl);
+            padding: 48px 44px;
+            border: 1px solid var(--color-border);
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow-card);
+            overflow: hidden;
+        }
+
+        .auth-card::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            pointer-events: none;
+            mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+            -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.5;
+        }
+
+        .auth-header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: var(--spacing-lg);
+            animation: fadeIn 0.6s ease;
+        }
+
+        .brand-icon {
+            width: 56px;
+            height: 56px;
+            display: grid;
+            place-items: center;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(108, 92, 231, 0.9), rgba(166, 109, 212, 0.9));
+            font-weight: 700;
+            font-size: 24px;
+            color: #fff;
+            box-shadow: 0 12px 30px rgba(108, 92, 231, 0.45);
+        }
+
+        .auth-title {
+            font-size: 26px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            color: #f8fafc;
+        }
+
+        .auth-subtitle {
+            font-size: 14px;
+            color: var(--color-muted);
+            margin-top: 4px;
+        }
+
+        .alert {
+            background: rgba(248, 113, 113, 0.12);
+            border: 1px solid rgba(248, 113, 113, 0.35);
+            color: #fecaca;
+            border-radius: var(--radius-lg);
+            padding: 14px 16px;
+            font-size: 14px;
+            margin-bottom: var(--spacing-md);
+            animation: fadeIn 0.4s ease;
+        }
+
+        .alert strong {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #fee2e2;
+        }
+
+        .alert ul {
+            list-style: none;
+            display: grid;
+            gap: 6px;
+        }
+
+        .auth-form {
+            display: grid;
+            gap: var(--spacing-md);
+        }
+
+        .social-section {
+            margin-top: 12px;
+        }
+
+        .social-divider {
+            position: relative;
+            text-align: center;
+            margin: 18px 0;
+            font-size: 13px;
+            color: var(--color-muted);
+        }
+
+        .social-divider::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--color-border);
+        }
+
+        .social-divider span {
+            position: relative;
+            padding: 0 10px;
+            background: var(--color-card);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .social-buttons {
+            display: grid;
+            gap: 12px;
+        }
+
+        .google-btn-wrapper {
+            display: flex;
+            justify-content: center;
+        }
+
+        .form-field label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--color-muted);
+            margin-bottom: 8px;
+        }
+
+        .auth-form input[type="text"],
+        .auth-form input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(15, 23, 42, 0.75);
+            color: #f1f5f9;
+            font-size: 15px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+        }
+
+        .auth-form input[type="text"]:focus,
+        .auth-form input[type="password"]:focus {
+            outline: none;
+            border-color: rgba(108, 92, 231, 0.8);
+            box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .auth-form input[type="text"]::placeholder,
+        .auth-form input[type="password"]::placeholder {
+            color: rgba(148, 163, 184, 0.6);
+        }
+
+        .field-error-list {
+            list-style: none;
+            margin-top: 8px;
+            display: grid;
+            gap: 6px;
+            font-size: 13px;
+            color: #fda4af;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            border-radius: var(--radius-lg);
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+            box-shadow: 0 12px 30px rgba(108, 92, 231, 0.35);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 36px rgba(108, 92, 231, 0.45);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+            box-shadow: 0 10px 24px rgba(108, 92, 231, 0.35);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: var(--spacing-lg);
+            font-size: 14px;
+            color: var(--color-muted);
+        }
+
+        .auth-footer a {
+            color: #93c5fd;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(0, 20px, 0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 520px) {
+            .auth-card {
+                padding: 36px 28px;
+                border-radius: 20px;
+            }
+
+            .brand-icon {
+                width: 52px;
+                height: 52px;
+            }
+
+            .auth-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-vibes">
+        <span class="vibe-1"></span>
+        <span class="vibe-2"></span>
+        <span class="vibe-3"></span>
+    </div>
+
+    <main class="auth-shell">
+        <section class="auth-card">
+            <header class="auth-header">
+                <span class="brand-icon">C</span>
+                <div>
+                    <h1 class="auth-title">Cinemadia</h1>
+                    <p class="auth-subtitle">Sevimli kontentingizga kirish uchun hisobingizga kiring</p>
+                </div>
+            </header>
+
+            {% if form.non_field_errors %}
+            <div class="alert">
+                <strong>Xatolik</strong>
+                <ul>
+                    {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% elif form.errors %}
+            <div class="alert">
+                <strong>Diqqat</strong>
+                <ul>
+                    <li>Kirish ma'lumotlarini tekshiring va qayta urinib koʻring.</li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                <div class="form-field">
+                    <label for="{{ form.username.id_for_label }}">Foydalanuvchi nomi</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    <ul class="field-error-list">
+                        {% for error in form.username.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.password.id_for_label }}">Parol</label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                    <ul class="field-error-list">
+                        {% for error in form.password.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn-login">Kirish</button>
+                <input type="hidden" name="next" value="{{ next }}">
+            </form>
+
+            <section class="social-section" aria-label="Ijtimoiy tarmoqlar orqali kirish">
+                <div class="social-divider"><span>yoki</span></div>
+                <div class="social-buttons">
+                    <div class="google-btn-wrapper">
+                        <div class="g-signin2" data-onsuccess="onGoogleSignIn" data-theme="dark" data-width="260" data-longtitle="true"></div>
+                    </div>
+                </div>
+            </section>
+
+            <footer class="auth-footer">
+                <a href="{% url 'cinemadia:home' %}">← Bosh sahifaga qaytish</a>
+            </footer>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const usernameInput = document.getElementById('{{ form.username.id_for_label }}');
+            const passwordInput = document.getElementById('{{ form.password.id_for_label }}');
+
+            if (usernameInput) {
+                usernameInput.setAttribute('placeholder', 'Foydalanuvchi nomi');
+                usernameInput.setAttribute('autocomplete', 'username');
+            }
+
+            if (passwordInput) {
+                passwordInput.setAttribute('placeholder', 'Parol');
+                passwordInput.setAttribute('autocomplete', 'current-password');
+            }
+        });
+
+        function onGoogleSignIn(googleUser) {
+            const profile = googleUser.getBasicProfile();
+            console.log('Google foydalanuvchi:', profile.getEmail());
+            // TODO: bu yerga haqiqiy backend integratsiyasi qo'shilsin.
+        }
+    </script>
+</body>
+</html>

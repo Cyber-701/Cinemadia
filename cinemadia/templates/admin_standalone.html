@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="uz">
+{% load static %}
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cinemadia Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            primary: '#2563eb',
+            secondary: '#4f46e5',
+            accent: '#0ea5e9',
+            success: '#16a34a',
+            danger: '#dc2626',
+            warning: '#f59e0b',
+            surface: 'rgba(15, 23, 42, .82)'
+          },
+          boxShadow: {
+            glow: '0 20px 45px -18px rgba(124, 58, 237, .6)'
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      background:
+        radial-gradient(circle at top, rgba(37, 99, 235, .08), transparent 52%),
+        linear-gradient(160deg, #0b1220 0%, #101935 35%, #050b1f 100%);
+      font-family: 'Inter', sans-serif;
+      color: #e2e8f0;
+    }
+    .glass {
+      backdrop-filter: blur(20px);
+      background: linear-gradient(175deg, rgba(15, 23, 42, .9), rgba(15, 23, 42, .7));
+      border: 1px solid rgba(148, 163, 184, .1);
+      box-shadow: 0 30px 80px -45px rgba(2, 6, 23, .85);
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: .65rem;
+      padding: .6rem 1rem;
+      border-radius: .9rem;
+      transition: color .2s ease, box-shadow .2s ease, background .2s ease;
+      color: #94a3b8;
+      font-weight: 500;
+      letter-spacing: .01em;
+    }
+    .nav-link i { font-size: .95rem; }
+    .nav-link:hover, .nav-link.active {
+      background: rgba(37, 99, 235, .14);
+      color: #f8fafc;
+      box-shadow: inset 0 0 0 1px rgba(79, 70, 229, .25);
+    }
+    ::-webkit-scrollbar { width: 9px; }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, rgba(37, 99, 235, .82), rgba(79, 70, 229, .72));
+      border-radius: 999px;
+    }
+    .status-pill {
+      display: inline-flex;
+      gap: .4rem;
+      align-items: center;
+      padding: .28rem .8rem;
+      font-size: .7rem;
+      border-radius: 999px;
+      font-weight: 600;
+      backdrop-filter: blur(4px);
+    }
+    .badge {
+      display: inline-flex;
+      gap: .35rem;
+      align-items: center;
+      padding: .22rem .65rem;
+      border-radius: 999px;
+      font-size: .65rem;
+      font-weight: 600;
+    }
+    .badge i { font-size: .65rem; }
+    .modal {
+      backdrop-filter: blur(8px);
+      background: rgba(2, 6, 23, .82);
+    }
+  </style>
+</head>
+<body class="text-slate-100" data-theme="dark">
+  <div id="toastContainer" class="fixed top-6 right-6 z-[60] space-y-3"></div>
+  <div class="min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="glass w-72 hidden lg:flex flex-col gap-6 p-6 sticky top-0 h-screen overflow-y-auto">
+      <div class="flex items-center gap-3">
+        <span class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-glow"><i class="fa-solid fa-clapperboard text-xl"></i></span>
+        <div>
+          <h1 class="text-xl font-bold">Cinemadia</h1>
+          <p class="text-xs text-slate-400">Admin boshqaruv</p>
+        </div>
+      </div>
+      <nav class="flex flex-col gap-1 text-sm">
+        <a href="#overview" class="nav-link active"><i class="fa-solid fa-chart-line text-primary"></i>Overview</a>
+        <a href="#analytics" class="nav-link"><i class="fa-solid fa-wave-square text-secondary"></i>Analytics</a>
+        <a href="#content" class="nav-link"><i class="fa-solid fa-film"></i> Kontent</a>
+        <a href="#users" class="nav-link"><i class="fa-solid fa-users"></i> Foydalanuvchilar</a>
+        <a href="#reviews" class="nav-link"><i class="fa-solid fa-comments"></i> Sharhlar</a>
+        <a href="#tasks" class="nav-link"><i class="fa-solid fa-list-check"></i> Vazifalar</a>
+        <a href="#settings" class="nav-link"><i class="fa-solid fa-sliders"></i> Sozlamalar</a>
+        <a href="#logs" class="nav-link"><i class="fa-solid fa-clock-rotate-left"></i> Loglar</a>
+      </nav>
+      <div class="mt-auto glass rounded-3xl p-4 space-y-3">
+        <h3 class="font-semibold text-white flex items-center gap-2 text-sm"><i class="fa-solid fa-bolt text-accent"></i>Tezkor amal</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">Yangi film qo‘shish, statistikani monitoring qilish va jamoani boshqarish uchun qulay panel.</p>
+        <a id="openMovieModal" href="{% url 'cinemadia:admin_movie_form' %}" class="w-full inline-flex justify-center py-2 rounded-xl bg-gradient-to-r from-primary to-secondary font-semibold text-center">+ Film qo‘shish</a>
+      </div>
+      <p class="text-xs text-slate-500 text-center">© <span id="footerYear"></span> Cinemadia</p>
+    </aside>
+
+    <!-- Main -->
+    <main class="flex-1 p-4 lg:p-8 space-y-8">
+      {% csrf_token %}
+      <!-- Top bar -->
+      <header class="glass rounded-3xl px-6 py-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between shadow-glow">
+        <div>
+          <p class="text-sm text-slate-400">Assalomu alaykum, Admin!</p>
+          <h2 class="text-2xl lg:text-3xl font-bold">Boshqaruv paneliga xush kelibsiz 🎬</h2>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input id="darkToggle" type="checkbox" class="sr-only" checked>
+            <span class="w-12 h-6 rounded-full bg-slate-700 peer-checked:bg-primary transition relative">
+              <span class="absolute top-[2px] left-[2px] w-5 h-5 rounded-full bg-white transition peer-checked:translate-x-6"></span>
+            </span>
+          </label>
+          <select id="languageSelect" class="bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-sm">
+            <option value="uz">O‘zbekcha</option>
+            <option value="ru">Русский</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      </header>
+
+      <!-- Overview cards -->
+      <section id="overview" class="space-y-5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Umumiy ko‘rsatkichlar</h3>
+          <span id="lastUpdate" class="text-xs text-slate-400"></span>
+        </div>
+        <div id="statsGrid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {% if stats_cards %}
+            {% for card in stats_cards %}
+              <div class="glass rounded-2xl p-5 space-y-3 shadow hover:-translate-y-1 transition">
+                <div class="flex items-center justify-between">
+                  <div class="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center text-lg">{{ card.icon }}</div>
+                  <span class="badge bg-secondary/10 text-secondary border border-secondary/30">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    {{ card.value }}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-400">{{ card.label }}</p>
+                <p class="text-2xl font-semibold text-white">
+                  {{ card.value }}
+                </p>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-xs text-slate-500">Hozircha statistik ma’lumot topilmadi.</p>
+          {% endif %}
+        </div>
+      </section>
+
+      <!-- Platform insights -->
+      <section id="insights" class="grid gap-6 xl:grid-cols-3">
+        <div class="glass rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="font-semibold">Top toifalar</h4>
+            <span class="text-xs text-slate-400">Top 5</span>
+          </div>
+          <ul class="space-y-3 text-sm">
+            {% if top_categories %}
+              {% for category in top_categories %}
+                <li class="flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-xl bg-primary/15 text-primary flex items-center justify-center font-semibold">{{ forloop.counter }}</span>
+                    <div>
+                      <p class="font-medium text-slate-100">{{ category.label }}</p>
+                      <p class="text-xs text-slate-500 uppercase tracking-widest">{{ category.key }}</p>
+                    </div>
+                  </div>
+                  <span class="badge bg-slate-900/60 border border-slate-700">{{ category.count }} ta</span>
+                </li>
+              {% endfor %}
+            {% else %}
+              <li class="text-xs text-slate-500">Toifalar bo‘yicha ma’lumot topilmadi.</li>
+            {% endif %}
+          </ul>
+        </div>
+
+        <div class="glass rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="font-semibold">Yangi qo‘shilgan filmlar</h4>
+            <a href="{% url 'cinemadia:home' %}" class="text-xs text-primary hover:text-secondary transition">Barchasini ko‘rish</a>
+          </div>
+          <ul class="space-y-3 text-sm">
+            {% if latest_movies %}
+              {% for movie in latest_movies %}
+                <li class="flex items-center justify-between gap-3">
+                  <div class="flex-1">
+                    <a href="{% url 'cinemadia:movie_detail' slug=movie.slug %}" class="font-semibold text-slate-100 hover:text-primary transition">{{ movie.title }}</a>
+                    <p class="text-xs text-slate-500 flex items-center gap-2 mt-1">
+                      <span class="flex items-center gap-1"><i class="fa-solid fa-clapperboard"></i>{{ movie.get_category_display|default:'Noma’lum' }}</span>
+                      <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+                      <span>{{ movie.created_at|date:"d M, Y" }}</span>
+                    </p>
+                  </div>
+                  <span class="badge bg-warning/10 text-warning border border-warning/30"><i class="fa-solid fa-star"></i>{{ movie.rating|default:'–'|floatformat:1 }}</span>
+                </li>
+              {% endfor %}
+            {% else %}
+              <li class="text-xs text-slate-500">Yangi filmlar hozircha yo‘q.</li>
+            {% endif %}
+          </ul>
+        </div>
+
+        <div class="space-y-4">
+          <div class="glass rounded-3xl p-6 space-y-4">
+            <div>
+              <p class="text-xs uppercase tracking-[0.35em] text-slate-500">Platforma ko‘rsatkichi</p>
+              <p class="text-3xl font-semibold text-white">
+                {% if average_rating %}{{ average_rating|floatformat:1 }}{% else %}—{% endif %}
+              </p>
+              <p class="text-xs text-slate-400">Filmlar o‘rtacha reytingi</p>
+            </div>
+            {% if engagement_stats %}
+              <div class="grid grid-cols-3 gap-3 text-xs">
+                <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3 text-center">
+                  <p class="text-slate-400">Sevimlilar</p>
+                  <p class="text-lg font-semibold text-white">{{ engagement_stats.favorites|default:0 }}</p>
+                </div>
+                <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3 text-center">
+                  <p class="text-slate-400">Ko‘rish ro‘yxati</p>
+                  <p class="text-lg font-semibold text-white">{{ engagement_stats.watchlists|default:0 }}</p>
+                </div>
+                <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3 text-center">
+                  <p class="text-slate-400">Tarix</p>
+                  <p class="text-lg font-semibold text-white">{{ engagement_stats.history|default:0 }}</p>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+          <div class="glass rounded-3xl p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="font-semibold">Eng yuqori reytinglar</h4>
+              <span class="text-xs text-slate-400">Top 6</span>
+            </div>
+            <ul class="space-y-3 text-sm">
+              {% if top_rated_movies %}
+                {% for movie in top_rated_movies %}
+                  <li class="flex items-center justify-between gap-3">
+                    <div>
+                      <a href="{% url 'cinemadia:movie_detail' slug=movie.slug %}" class="font-semibold text-slate-100 hover:text-secondary transition">{{ movie.title }}</a>
+                      <p class="text-xs text-slate-500 mt-1">{{ movie.genre|default:'—' }}</p>
+                    </div>
+                    <span class="badge bg-success/10 text-success border border-success/30"><i class="fa-solid fa-star"></i>{{ movie.rating|default:'–'|floatformat:1 }}</span>
+                  </li>
+                {% endfor %}
+              {% else %}
+                <li class="text-xs text-slate-500">Reyting ma’lumotlari hozircha yo‘q.</li>
+              {% endif %}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics -->
+      <section id="analytics" class="grid lg:grid-cols-5 gap-6">
+        <div class="glass rounded-3xl p-6 lg:col-span-3 space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="font-semibold">Tomoshabin oqimi</h4>
+            <select id="chartRange" class="bg-slate-900/70 border border-slate-700 rounded-xl px-3 py-1.5 text-xs">
+              <option value="7">7 kun</option>
+              <option value="30" selected>30 kun</option>
+              <option value="90">90 kun</option>
+            </select>
+          </div>
+          <canvas id="trafficChart" height="240"></canvas>
+        </div>
+        <div class="glass rounded-3xl p-6 space-y-4 lg:col-span-2">
+          <h4 class="font-semibold">Faollik darajasi</h4>
+          <div id="engagementList" class="space-y-4"></div>
+        </div>
+      </section>
+
+      <!-- Content table -->
+      <section id="content" class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 class="text-lg font-semibold">Kontent boshqaruvi</h3>
+            <p class="text-xs text-slate-400">Ommabop kinolarni tahrirlash va yangilash</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+              <input id="movieSearch" type="search" placeholder="Film qidirish" class="pl-9 pr-4 py-2 bg-slate-900/70 border border-slate-700 rounded-xl text-sm" />
+            </div>
+            <a id="openMovieModalSecondary" href="{% url 'cinemadia:admin_movie_form' %}" class="bg-primary/90 hover:bg-primary px-4 py-2 rounded-xl text-sm font-semibold">+ Yangi film</a>
+          </div>
+        </div>
+        <div class="glass rounded-3xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+              <thead class="bg-slate-900/70 text-slate-400 uppercase text-[11px] tracking-widest">
+                <tr>
+                  <th class="px-6 py-3 text-left">Film</th>
+                  <th class="px-6 py-3 text-left">Janr</th>
+                  <th class="px-6 py-3 text-left">Reyting</th>
+                  <th class="px-6 py-3 text-left">Status</th>
+                  <th class="px-6 py-3 text-left">Oxirgi yangilanish</th>
+                  <th class="px-6 py-3 text-right">Amallar</th>
+                </tr>
+              </thead>
+              <tbody id="movieTable" class="divide-y divide-slate-800/80">
+                {% if all_movies %}
+                  {% for movie in all_movies %}
+                    <tr class="hover:bg-slate-900/40 transition">
+                      <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                          {% if movie.get_poster %}
+                            <img src="{{ movie.get_poster }}" alt="{{ movie.title }}" class="w-10 h-14 rounded-lg object-cover">
+                          {% else %}
+                            <div class="w-10 h-14 rounded-lg bg-slate-700 flex items-center justify-center">
+                              <i class="fa-solid fa-film text-slate-400"></i>
+                            </div>
+                          {% endif %}
+                          <div>
+                            <a href="{% url 'cinemadia:movie_detail' movie.slug %}" class="font-semibold text-slate-100 hover:text-primary transition">{{ movie.title }}</a>
+                            <p class="text-xs text-slate-500">{{ movie.genre|truncatechars:30 }}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 text-sm text-slate-300">{{ movie.genre|truncatechars:25 }}</td>
+                      <td class="px-6 py-4">
+                        <span class="badge bg-warning/10 text-warning border border-warning/30">
+                          <i class="fa-solid fa-star"></i>{{ movie.rating|default:'–'|floatformat:1 }}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4">
+                        {% if movie.status == 'Published' %}
+                          <span class="status-pill bg-success/15 text-success border border-success/30">Nashr</span>
+                        {% elif movie.status == 'Draft' %}
+                          <span class="status-pill bg-slate-700 text-slate-300 border border-slate-600">Qoralama</span>
+                        {% elif movie.status == 'Scheduled' %}
+                          <span class="status-pill bg-warning/15 text-warning border border-warning/30">Rejalashtirilgan</span>
+                        {% else %}
+                          <span class="status-pill bg-slate-700 text-slate-300 border border-slate-600">{{ movie.get_status_display }}</span>
+                        {% endif %}
+                      </td>
+                      <td class="px-6 py-4 text-sm text-slate-400">{{ movie.created_at|date:"d.m.Y" }}</td>
+                      <td class="px-6 py-4">
+                        <div class="flex items-center justify-end gap-2">
+                          <a href="{% url 'cinemadia:admin_movie_form' %}?id={{ movie.id }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-lg text-xs font-medium transition">
+                            <i class="fa-solid fa-edit"></i>
+                            <span>Tahrirlash</span>
+                          </a>
+                          <button onclick="deleteMovie({{ movie.id }}, '{{ movie.title }}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-xs font-medium transition">
+                            <i class="fa-solid fa-trash"></i>
+                            <span>O'chirish</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-slate-500">
+                      <i class="fa-solid fa-film text-2xl mb-2 block"></i>
+                      Hozircha film yo'q. Yangi film qo'shish uchun yuqoridagi tugmani bosing.
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between px-6 py-4 text-xs text-slate-400 bg-slate-900/60">
+            <span id="movieCount">{{ all_movies|length }} ta film</span>
+            <div class="text-xs text-slate-500">
+              Oxirgi yangilanish: {{ all_movies.0.created_at|date:"H:i d.m.Y" }}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Users & Reviews -->
+      <section class="grid lg:grid-cols-2 gap-6" id="users">
+        <div class="glass rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">Foydalanuvchilar</h3>
+            <button id="exportUsers" class="text-xs px-4 py-2 rounded-xl border border-slate-700">Eksport (CSV)</button>
+          </div>
+          <div id="userList" class="space-y-3"></div>
+        </div>
+        <div id="reviews" class="glass rounded-3xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold">So‘nggi sharhlar</h3>
+            <button class="text-xs px-4 py-2 rounded-xl border border-slate-700">Moderatsiya</button>
+          </div>
+          <div id="reviewList" class="space-y-3"></div>
+        </div>
+      </section>
+
+      <!-- Tasks -->
+      <section id="tasks" class="glass rounded-3xl p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Admin vazifalari</h3>
+          <button id="addTaskBtn" class="text-xs px-4 py-2 rounded-xl bg-secondary/20 border border-secondary/40 text-secondary font-semibold">+ Yangi vazifa</button>
+        </div>
+        <div id="taskBoard" class="grid md:grid-cols-3 gap-4 text-sm"></div>
+      </section>
+
+      <!-- Settings -->
+      <section id="settings" class="glass rounded-3xl p-6 space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold">Platforma sozlamalari</h3>
+            <p class="text-xs text-slate-400">Til, tema va bildirishnomalarni boshqarish</p>
+          </div>
+          <button id="saveSettings" class="px-5 py-2 rounded-xl bg-primary font-semibold">Saqlash</button>
+        </div>
+        <div class="grid md:grid-cols-2 gap-4 text-sm">
+          <div class="space-y-4">
+            <div>
+              <label class="font-semibold text-slate-200">Til</label>
+              <select id="settingsLanguage" class="mt-2 w-full bg-slate-900/70 border border-slate-700 rounded-xl px-3 py-2">
+                <option value="uz">O‘zbekcha</option>
+                <option value="ru">Русский</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-semibold text-slate-200">Bildirishnomalar</label>
+              <div class="mt-2 space-y-2">
+                <label class="flex items-center gap-2"><input type="checkbox" class="rounded" checked> Yangi foydalanuvchi</label>
+                <label class="flex items-center gap-2"><input type="checkbox" class="rounded" checked> Sharhlar moderatsiyasi</label>
+                <label class="flex items-center gap-2"><input type="checkbox" class="rounded"> Texnik xabarlar</label>
+              </div>
+            </div>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label class="font-semibold text-slate-200">Tema</label>
+              <div class="grid grid-cols-3 gap-3 mt-3">
+                <button data-theme="dark" class="theme-btn bg-slate-900/80 border border-slate-700 rounded-xl py-4 flex flex-col items-center gap-2">
+                  <span class="w-6 h-6 rounded-full bg-slate-300"></span>
+                  <span class="text-xs text-slate-400">Dark</span>
+                </button>
+                <button data-theme="dim" class="theme-btn bg-slate-800 text-slate-200 border border-slate-600 rounded-xl py-4 flex flex-col items-center gap-2">
+                  <span class="w-6 h-6 rounded-full bg-slate-500"></span>
+                  <span class="text-xs">Dim</span>
+                </button>
+                <button data-theme="light" class="theme-btn bg-white text-slate-700 border border-slate-200 rounded-xl py-4 flex flex-col items-center gap-2">
+                  <span class="w-6 h-6 rounded-full bg-yellow-300"></span>
+                  <span class="text-xs">Light</span>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="font-semibold text-slate-200">Xavfsizlik</label>
+              <div class="mt-2 space-y-2">
+                <label class="flex items-center gap-2"><input type="checkbox" class="rounded" checked> 2FA talab qilinsin</label>
+                <label class="flex items-center gap-2"><input type="checkbox" class="rounded"> Audit log yuborish</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Logs -->
+      <section id="logs" class="glass rounded-3xl p-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold">Faoliyat loglari</h3>
+          <button id="clearLogs" class="text-xs px-4 py-2 rounded-xl border border-slate-700">Tozalash</button>
+        </div>
+        <div id="logList" class="space-y-2 text-xs"></div>
+      </section>
+
+      <footer class="py-6 text-center text-xs text-slate-500">Cinemadia admin panel – zamonaviy dizayn va qulay boshqaruv.</footer>
+    </main>
+  </div>
+
+  <!-- Movie Modal -->
+  <div id="movieModal" class="hidden fixed inset-0 z-50 modal items-center justify-center">
+    <div class="glass relative w-full max-w-3xl rounded-3xl p-8 space-y-6">
+      <button id="closeMovieModal" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+      <div class="flex items-start gap-4">
+        <span class="hidden sm:flex w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary items-center justify-center text-xl text-white shadow-glow"><i class="fa-solid fa-film"></i></span>
+        <div class="space-y-1">
+          <h3 id="movieModalTitle" class="text-2xl font-semibold">Yangi film qo‘shish</h3>
+          <p id="movieModalSubtitle" class="text-sm text-slate-400">Repertuarni kengaytirish uchun asosiy ma’lumotlarni kiriting.</p>
+        </div>
+      </div>
+      <div id="movieFormAlert" class="hidden rounded-2xl border border-danger/40 bg-danger/10 px-4 py-3 text-xs font-medium text-danger"></div>
+      <form id="movieForm" class="space-y-6 text-sm">
+        <div class="space-y-3">
+          <label class="font-semibold text-slate-200" for="movieTitle">Film nomi <span class="text-danger">*</span></label>
+          <input id="movieTitle" name="title" required data-field="title" class="movie-field w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/30" placeholder="Masalan, Kod Shadow" autocomplete="off" autocapitalize="sentences">
+          <div class="flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-xs text-primary">
+            <i class="fa-solid fa-lightbulb"></i>
+            <span>Film nomini eng yuqori qismdagi shu maydonga kiriting.</span>
+          </div>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="space-y-2">
+            <label class="font-semibold text-slate-200" for="movieCategory">Kategoriya <span class="text-danger">*</span></label>
+            <select id="movieCategory" name="category" data-field="category" class="movie-field w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/30">
+              <option value="">Kategoriya tanlang</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="font-semibold text-slate-200" for="movieGenre">Janr <span class="text-danger">*</span></label>
+            <input id="movieGenre" name="genre" required data-field="genre" class="movie-field w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/30" placeholder="Thriller, Drama">
+          </div>
+          <div class="space-y-2">
+            <label class="font-semibold text-slate-200" for="movieRating">Reyting <span class="text-danger">*</span></label>
+            <input id="movieRating" name="rating" type="number" min="0" max="10" step="0.1" required data-field="rating" class="movie-field w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/30" placeholder="0 - 10">
+            <p class="text-xs text-slate-500">Tomoshabinlar bahosiga ko‘ra 0 dan 10 gacha qiymat kiriting.</p>
+          </div>
+          <div class="space-y-2">
+            <label class="font-semibold text-slate-200" for="movieReleaseDate">Premyera sanasi</label>
+            <input id="movieReleaseDate" name="release_date" type="date" data-field="release_date" class="movie-field w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/30">
+            <p class="text-xs text-slate-500">Kelajak sanasi bo‘lsa, avtomatik rejalashtirilgan deb belgilanadi.</p>
+          </div>
+          <div class="space-y-2">
+            <label class="font-semibold text-slate-200" for="movieStatus">Status</label>
+            <select id="movieStatus" name="status" data-field="status" class="movie-field w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/30">
+              <option value="Published">Bugun qo‘yish</option>
+              <option value="Draft">Chiqarmasdan saqlash</option>
+              <option value="Scheduled">Kelajak sanasiga rejalash</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="font-semibold text-slate-200" for="movieDuration">Davomiylik (daq)</label>
+            <input id="movieDuration" name="duration" type="number" min="0" max="600" step="1" data-field="duration" class="movie-field w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/30" placeholder="Masalan, 126">
+          </div>
+          <div class="space-y-2">
+            <label class="font-semibold text-slate-200" for="moviePoster">Poster URL</label>
+            <input id="moviePoster" name="poster" type="url" data-field="poster" class="movie-field w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/30" placeholder="https://...">
+            <p class="text-xs text-slate-500">3:4 nisbatdagi rasm tavsiya etiladi (jpg/png/webp).</p>
+          </div>
+          <div class="space-y-2">
+            <label class="font-semibold text-slate-200" for="moviePosterFile">Poster fayli</label>
+            <button type="button" id="moviePosterUploadBtn" class="w-full rounded-xl border border-slate-700 px-4 py-2.5 text-sm text-slate-300 hover:border-primary/40 hover:text-primary transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <span>Poster yuklash</span>
+            </button>
+            <input id="moviePosterFile" type="file" accept="image/*" class="hidden">
+            <p id="moviePosterFileName" class="text-xs text-slate-500">Maks: 1.5MB, jpg/png/webp.</p>
+          </div>
+          <div class="space-y-2">
+            <label class="font-semibold text-slate-200" for="movieFeatured" class="flex items-center gap-2">Premyera sifatida belgilash</label>
+            <label class="inline-flex items-center gap-2 text-xs text-slate-400">
+              <input id="movieFeatured" name="is_featured" type="checkbox" class="rounded border-slate-600">
+              <span>Premyera blokida ko‘rsatish</span>
+            </label>
+          </div>
+          <div class="md:col-span-2 space-y-2">
+            <label class="font-semibold text-slate-200" for="movieSynopsis">Qisqacha mazmun</label>
+            <textarea id="movieSynopsis" name="synopsis" rows="4" data-field="synopsis" class="movie-field w-full rounded-xl border border-slate-700/80 bg-slate-900/80 px-4 py-2.5 text-sm transition focus:border-primary focus:ring-2 focus:ring-primary/30" placeholder="Film haqida qisqa sharh"></textarea>
+            <div class="flex items-center justify-between text-xs text-slate-500">
+              <p>Mazmun uzunligi 40-320 ta belgidan iborat bo‘lsa yaxshi UX ta’minlanadi.</p>
+              <span id="synopsisCounter">0/320</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p class="flex items-center gap-2 text-xs text-slate-500"><i class="fa-solid fa-shield-check text-success"></i><span>Ma’lumotlar mahalliy qurilmada saqlanadi.</span></p>
+          <div class="flex items-center gap-3">
+            <button type="button" id="resetMovieForm" class="rounded-xl border border-slate-700 px-4 py-2 text-sm hover:border-primary/40 hover:text-primary transition">Formani tiklash</button>
+            <button type="submit" id="movieSubmit" class="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white shadow-glow transition hover:bg-primary/90">Saqlash</button>
+          </div>
+        </div>
+      </form>
+      <div id="moviePreview" class="rounded-3xl border border-slate-800 bg-slate-900/60 p-5 space-y-3">
+        <p class="text-xs uppercase tracking-[0.3em] text-slate-500">Premyera preview</p>
+        <div class="flex gap-4 flex-col sm:flex-row">
+          <div class="w-full sm:w-40 h-56 rounded-2xl overflow-hidden border border-slate-800 bg-slate-800/60 flex items-center justify-center">
+            <img id="moviePosterPreview" src="" alt="Poster preview" class="hidden w-full h-full object-cover">
+            <span id="moviePosterPlaceholder" class="text-xs text-slate-500">Poster tanlang yoki URL kiriting</span>
+          </div>
+          <div class="flex-1 space-y-3">
+            <h4 id="moviePreviewTitle" class="text-xl font-semibold text-slate-100">Film nomi</h4>
+            <p id="moviePreviewMeta" class="text-xs text-slate-400">Janr • Premyera sanasi</p>
+            <p id="moviePreviewSynopsis" class="text-sm text-slate-300 leading-relaxed">Sinopsis kiriting — foydalanuvchi film haqida bir qarashda tasavvurga ega bo‘lsin.</p>
+            <div class="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs text-primary" id="moviePreviewFeatured" hidden>
+              <i class="fa-solid fa-crown"></i><span>Premyera</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Modal -->
+  <div id="taskModal" class="hidden fixed inset-0 z-50 modal items-center justify-center">
+    <div class="glass rounded-3xl w-full max-w-lg p-7 space-y-5 relative">
+      <button id="closeTaskModal" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+      <h3 class="text-xl font-semibold">Yangi vazifa</h3>
+      <form id="taskForm" class="space-y-4 text-sm">
+        <div>
+          <label class="font-semibold">Sarlavha</label>
+          <input name="title" required class="mt-1 w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2">
+        </div>
+        <div>
+          <label class="font-semibold">Tavsif</label>
+          <textarea name="description" rows="3" class="mt-1 w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2"></textarea>
+        </div>
+        <div>
+          <label class="font-semibold">Ustuvorlik</label>
+          <select name="priority" class="mt-1 w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2">
+            <option value="High">Yuqori</option>
+            <option value="Medium">O‘rtacha</option>
+            <option value="Low">Past</option>
+          </select>
+        </div>
+        <div class="flex items-center justify-end gap-3">
+          <button type="button" id="resetTaskForm" class="px-4 py-2 rounded-xl border border-slate-700">Bekor qilish</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-secondary/80 text-slate-900 font-semibold">Qo‘shish</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <template id="userTemplate">
+    <div class="glass rounded-2xl p-4 flex items-center gap-4">
+      <img class="w-12 h-12 rounded-2xl object-cover" src="" alt="User avatar">
+      <div class="flex-1">
+        <p class="font-semibold"></p>
+        <div class="flex flex-wrap items-center gap-2 text-xs text-slate-400 mt-1"></div>
+      </div>
+      <button class="px-3 py-1 rounded-lg border border-slate-700 text-xs">Profil</button>
+    </div>
+  </template>
+
+  <template id="reviewTemplate">
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <div class="flex items-center justify-between text-xs text-slate-400">
+        <span class="font-semibold text-slate-100"></span>
+        <span class="badge bg-warning/20 text-warning border border-warning/30"><i class="fa-solid fa-star"></i><span class="rating"></span></span>
+      </div>
+      <p class="text-sm leading-relaxed text-slate-300"></p>
+      <div class="flex items-center gap-3 text-xs text-slate-500">
+        <span class="movie"></span>
+        <span class="w-1 h-1 rounded-full bg-slate-500"></span>
+        <span class="date"></span>
+      </div>
+    </div>
+  </template>
+
+  <template id="taskTemplate">
+    <div class="glass rounded-2xl p-4 space-y-3">
+      <div class="flex items-center justify-between">
+        <p class="font-semibold"></p>
+        <span class="badge"></span>
+      </div>
+      <p class="text-sm text-slate-300 leading-relaxed"></p>
+      <div class="flex items-center justify-between text-xs text-slate-500">
+        <span class="date"></span>
+        <button class="completeBtn px-3 py-1 rounded-lg border border-success/40 text-success hover:bg-success/10">Bajarildi</button>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // Django dan kelgan filmlar
+    const DJANGO_MOVIES = [
+      {% for movie in all_movies %}
+      {
+        id: {{ movie.id }},
+        title: "{{ movie.title|escapejs }}",
+        genre: "{{ movie.genre|escapejs }}",
+        rating: {{ movie.rating|default:"0" }},
+        status: "{{ movie.status }}",
+        category: "{{ movie.category }}",
+        poster: "{% if movie.get_poster %}{{ movie.get_poster }}{% endif %}",
+        updatedAt: "{{ movie.updated_at|date:'d.m.Y' }}",
+        release_date: "{{ movie.year }}"
+      }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+
+    const STORAGE_KEYS = {
+      MOVIES: 'cinemadia_movies_v2',
+      TASKS: 'cinemadia_tasks_v2',
+      SETTINGS: 'cinemadia_settings_v2',
+      LOGS: 'cinemadia_logs_v2'
+    };
+
+    const LIMITS = {
+      POSTER_FILE: 1.5 * 1024 * 1024 // 1.5 MB
+    };
+
+    const defaults = {
+      movies: [
+        { id: crypto.randomUUID(), title: "Qorong'u Sirlar", genre: "Thriller, Drama", rating: 8.6, status: "Published", category: "uzbek", release_date: "2025-03-15", duration: 118, synopsis: "Jurnalist sirli shahar voqealarini fosh qiladi.", poster: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba", is_featured: true, updatedAt: "2025-11-01" },
+        { id: crypto.randomUUID(), title: "Samoviy yo'l", genre: "Sci-Fi, Adventure", rating: 9.1, status: "Scheduled", category: "sci-fi", release_date: "2025-12-05", duration: 142, synopsis: "Kosmik ekspeditsiya davomida yangi sayyora topiladi.", poster: "https://images.unsplash.com/photo-1542204625-de6161c71e66", is_featured: true, updatedAt: "2025-10-28" },
+        { id: crypto.randomUUID(), title: "Nilufarning orzusi", genre: "Romance", rating: 7.8, status: "Draft", category: "drama", release_date: "2024-07-21", duration: 102, synopsis: "Shahar qizining san'atdagi yo'li.", poster: "https://images.unsplash.com/photo-1498050108023-c5249f4df085", is_featured: false, updatedAt: "2025-10-20" },
+        { id: crypto.randomUUID(), title: "Kod Shadow", genre: "Action, Tech", rating: 8.9, status: "Published", category: "action", release_date: "2025-01-09", duration: 126, synopsis: "Kiberxavfsizlik qahramoni sabotajni to'xtatadi.", poster: "https://images.unsplash.com/photo-1542204625-de6161c71e66", is_featured: true, updatedAt: "2025-11-03" }
+      ],
+      tasks: [
+        { id: crypto.randomUUID(), title: "Trailer videoni yangilash", description: "Kod Shadow filmiga yangi HD trailer yuklash.", priority: "High", date: "Bugun", column: "progress" },
+        { id: crypto.randomUUID(), title: "Moderatsiya siyosati", description: "Sharh qo'llanmasini tarjima qilish", priority: "Medium", date: "Ertaga", column: "todo" },
+        { id: crypto.randomUUID(), title: "Premium landing", description: "Premium sahifaga vitrina joylash", priority: "Low", date: "1 hafta", column: "review" }
+      ],
+      settings: { theme: 'dark', language: 'uz', notifications: { newUser: true, comments: true, system: false } },
+      logs: [
+        { message: "Admin tizimga kirdi", type: "info", time: "14:21" },
+        { message: "\"Kod Shadow\" filmi yangilandi", type: "success", time: "14:05" },
+        { message: "Moderator 4 ta sharhni o'chirdi", type: "warning", time: "13:47" }
+      ],
+      users: [
+        { name: "Aziza Jurayeva", role: "Premium", since: "2023", avatar: "https://i.pravatar.cc/100?img=57", activity: ["Oxirgi kirish: 2 soat", "Favoritlar: 38", "Sharhlar: 12"] },
+        { name: "Olimjon Raximov", role: "Moderator", since: "2022", avatar: "https://i.pravatar.cc/100?img=12", activity: ["Oxirgi kirish: 30 daqiqa", "Tasdiqlangan sharhlar: 38"] },
+        { name: "Diana Melikova", role: "Free", since: "2024", avatar: "https://i.pravatar.cc/100?img=39", activity: ["Oxirgi kirish: 1 kun", "Sevimlilar: 12"] }
+      ],
+      reviews: [
+        { user: "Aziza Jurayeva", rating: 4.5, content: "Kinematografiya juda chiroyli, yakun biroz shoshilgan.", movie: "Samoviy yo'l", date: "5 soat oldin" },
+        { user: "Olimjon Raximov", rating: 5, content: "Kod Shadow – yilning eng yaxshi aksioni!", movie: "Kod Shadow", date: "1 kun oldin" },
+        { user: "Diana Melikova", rating: 3.5, content: "Nilufarning orzusi yoqimli, lekin musiqiy sahnalar ko'proq bo'lsa yaxshi.", movie: "Nilufarning orzusi", date: "3 kun oldin" }
+      ],
+      engagement: [
+        { title: "Seriallar", description: "Oxirgi 24 soatda 32% ko‘tarildi", progress: 68 },
+        { title: "Hind kinolar", description: "Yangi kontent sababli 21% yuqori", progress: 55 },
+        { title: "Sharhlar moderatsiyasi", description: "12 ta sharh navbatda", progress: 41 }
+      ]
+    };
+
+    const state = {
+      movies: DJANGO_MOVIES.length > 0 ? DJANGO_MOVIES : defaults.movies,
+      tasks: loadOrDefault(STORAGE_KEYS.TASKS, defaults.tasks),
+      settings: loadOrDefault(STORAGE_KEYS.SETTINGS, defaults.settings),
+      logs: loadOrDefault(STORAGE_KEYS.LOGS, defaults.logs),
+      searchQuery: '',
+      currentPage: 1,
+      perPage: 5,
+      editingMovie: null,
+      chart: null,
+      toastTimeouts: [],
+      moviePosterUploadData: null,
+      categories: [],
+      filters: {
+        status: 'all',
+        category: 'all'
+      }
+    };
+
+    function loadOrDefault(key, fallback) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) {
+          localStorage.setItem(key, JSON.stringify(fallback));
+          return structuredClone(fallback);
+        }
+        return JSON.parse(raw);
+      } catch {
+        return structuredClone(fallback);
+      }
+    }
+
+    function save(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    const els = {
+      statsGrid: document.getElementById('statsGrid'),
+      lastUpdate: document.getElementById('lastUpdate'),
+      engagementList: document.getElementById('engagementList'),
+      movieTable: document.getElementById('movieTable'),
+      movieCount: document.getElementById('movieCount'),
+      paginationInfo: document.getElementById('paginationInfo'),
+      prevPage: document.getElementById('prevPage'),
+      nextPage: document.getElementById('nextPage'),
+      movieSearch: document.getElementById('movieSearch'),
+      movieModal: document.getElementById('movieModal'),
+      movieForm: document.getElementById('movieForm'),
+      movieModalTitle: document.getElementById('movieModalTitle'),
+      resetMovieForm: document.getElementById('resetMovieForm'),
+      openMovieModal: document.getElementById('openMovieModal'),
+      openMovieModalSecondary: document.getElementById('openMovieModalSecondary'),
+      closeMovieModal: document.getElementById('closeMovieModal'),
+      languageSelect: document.getElementById('languageSelect'),
+      settingsLanguage: document.getElementById('settingsLanguage'),
+      darkToggle: document.getElementById('darkToggle'),
+      userList: document.getElementById('userList'),
+      reviewList: document.getElementById('reviewList'),
+      addTaskBtn: document.getElementById('addTaskBtn'),
+      taskBoard: document.getElementById('taskBoard'),
+      taskModal: document.getElementById('taskModal'),
+      taskForm: document.getElementById('taskForm'),
+      resetTaskForm: document.getElementById('resetTaskForm'),
+      closeTaskModal: document.getElementById('closeTaskModal'),
+      saveSettings: document.getElementById('saveSettings'),
+      logList: document.getElementById('logList'),
+      clearLogs: document.getElementById('clearLogs'),
+      chartRange: document.getElementById('chartRange'),
+      footerYear: document.getElementById('footerYear'),
+      navLinks: document.querySelectorAll('.nav-link'),
+      themeButtons: document.querySelectorAll('.theme-btn'),
+      toastContainer: document.getElementById('toastContainer'),
+      movieFormAlert: document.getElementById('movieFormAlert'),
+      movieFields: Array.from(document.querySelectorAll('.movie-field')),
+      movieTitle: document.getElementById('movieTitle'),
+      movieCategory: document.getElementById('movieCategory'),
+      movieGenre: document.getElementById('movieGenre'),
+      movieStatus: document.getElementById('movieStatus'),
+      movieReleaseDate: document.getElementById('movieReleaseDate'),
+      movieFeatured: document.getElementById('movieFeatured'),
+      moviePoster: document.getElementById('moviePoster'),
+      movieSynopsis: document.getElementById('movieSynopsis'),
+      synopsisCounter: document.getElementById('synopsisCounter'),
+      moviePosterUploadBtn: document.getElementById('moviePosterUploadBtn'),
+      moviePosterFile: document.getElementById('moviePosterFile'),
+      moviePosterFileName: document.getElementById('moviePosterFileName'),
+      moviePosterPreview: document.getElementById('moviePosterPreview'),
+      moviePosterPlaceholder: document.getElementById('moviePosterPlaceholder'),
+      moviePreviewTitle: document.getElementById('moviePreviewTitle'),
+      moviePreviewMeta: document.getElementById('moviePreviewMeta'),
+      moviePreviewSynopsis: document.getElementById('moviePreviewSynopsis'),
+      moviePreviewFeatured: document.getElementById('moviePreviewFeatured')
+    };
+
+    const templates = {
+      user: document.getElementById('userTemplate').content,
+      review: document.getElementById('reviewTemplate').content,
+      task: document.getElementById('taskTemplate').content
+    };
+
+    function formatTrend(stat) {
+      const trendColor = stat.trend === 'up' ? 'text-success bg-success/15 border-success/30' : 'text-danger bg-danger/15 border-danger/30';
+      const trendIcon = stat.trend === 'up' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+      return `<span class="status-pill ${trendColor} border"><i class="fa-solid ${trendIcon}"></i>${stat.change}</span>`;
+    }
+
+    function showToast({ title, message, type = 'info', duration = 3600 }) {
+      const colors = {
+        info: 'from-primary to-secondary text-white',
+        success: 'from-success to-primary text-white',
+        warning: 'from-warning to-accent text-slate-900',
+        danger: 'from-danger to-secondary text-white'
+      };
+      const icons = {
+        info: 'fa-circle-info',
+        success: 'fa-circle-check',
+        warning: 'fa-triangle-exclamation',
+        danger: 'fa-circle-exclamation'
+      };
+
+      const toast = document.createElement('div');
+      toast.className = `toast-entry overflow-hidden rounded-2xl shadow-lg border border-slate-800/60 bg-slate-900/90 animate-[fadeIn_.3s_ease]`;
+      toast.innerHTML = `
+        <div class="flex items-start gap-3 px-4 py-3">
+          <span class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br ${colors[type]}">
+            <i class="fa-solid ${icons[type]}"></i>
+          </span>
+          <div class="flex-1">
+            <p class="text-sm font-semibold text-slate-100">${title}</p>
+            <p class="text-xs text-slate-400 leading-relaxed">${message}</p>
+          </div>
+          <button class="text-slate-500 hover:text-white">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>`;
+
+      const removeToast = () => {
+        toast.classList.add('animate-[fadeOut_.25s_ease_forwards]');
+        const timeoutId = setTimeout(() => {
+          toast.remove();
+        }, 220);
+        state.toastTimeouts = state.toastTimeouts.filter(id => id !== timeoutId);
+      };
+
+      const closeBtn = toast.querySelector('button');
+      closeBtn.addEventListener('click', removeToast);
+
+      els.toastContainer.appendChild(toast);
+      const timeoutId = setTimeout(removeToast, duration);
+      state.toastTimeouts.push(timeoutId);
+    }
+
+    function clearMovieErrors() {
+      els.movieFormAlert.classList.add('hidden');
+      els.movieFormAlert.textContent = '';
+      els.movieFields.forEach(field => field.classList.remove('border-danger/60', 'focus:border-danger', 'focus:ring-danger/30', 'shake'));
+      els.moviePosterUploadBtn.classList.remove('border-danger/60', 'text-danger');
+      els.moviePosterFileName.classList.remove('text-danger');
+      els.movieFormAlert.dataset.field = '';
+    }
+
+    function showMovieError(message, fieldName = null) {
+      els.movieFormAlert.textContent = message;
+      els.movieFormAlert.classList.remove('hidden');
+      els.movieFormAlert.dataset.field = fieldName || '';
+      if (fieldName) {
+        const field = els.movieFields.find(item => item.dataset.field === fieldName);
+        if (field) {
+          field.classList.add('border-danger/60');
+          field.classList.add('shake');
+          setTimeout(() => field.classList.remove('shake'), 480);
+          field.focus();
+        }
+        if (fieldName === 'poster' || fieldName === 'poster_file') {
+          els.moviePosterUploadBtn.classList.add('border-danger/60', 'text-danger');
+          els.moviePosterFileName.classList.add('text-danger');
+        }
+      }
+    }
+
+    function populateCategories() {
+      const options = state.categories.length ? state.categories : [
+        { key: 'uzbek', label: 'Tarjima kinolar' },
+        { key: 'bollywood', label: 'Hind kinolar' },
+        { key: 'series', label: 'Seriallar' },
+        { key: 'animation', label: 'Multfilmlar' },
+        { key: 'documentary', label: 'Hujjatli filmlar' }
+      ];
+      els.movieCategory.innerHTML = '<option value="">Kategoriya tanlang</option>' + options.map(option => `<option value="${option.key}">${option.label}</option>`).join('');
+    }
+
+    function parseFloatSafe(value, fallback = 0) {
+      const parsed = parseFloat(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function parseIntSafe(value, fallback = 0) {
+      const parsed = parseInt(value, 10);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function getCategoryLabel(key) {
+      const source = state.categories.length ? state.categories : [
+        { key: 'uzbek', label: 'Tarjima kinolar' },
+        { key: 'bollywood', label: 'Hind kinolar' },
+        { key: 'series', label: 'Seriallar' },
+        { key: 'animation', label: 'Multfilmlar' },
+        { key: 'documentary', label: 'Hujjatli filmlar' }
+      ];
+      return source.find(item => item.key === key)?.label ?? key;
+    }
+
+    function resetPosterUpload() {
+      state.moviePosterUploadData = null;
+      if (els.moviePosterFile) {
+        els.moviePosterFile.value = '';
+      }
+      els.moviePosterFileName.textContent = 'Maks: 1.5MB, jpg/png/webp.';
+      setPosterPreview(els.moviePoster.value?.trim() || '');
+    }
+
+    function setPosterPreview(src) {
+      if (src) {
+        els.moviePosterPreview.src = src;
+        els.moviePosterPreview.classList.remove('hidden');
+        els.moviePosterPlaceholder.classList.add('hidden');
+      } else {
+        els.moviePosterPreview.src = '';
+        els.moviePosterPreview.classList.add('hidden');
+        els.moviePosterPlaceholder.classList.remove('hidden');
+      }
+    }
+
+    function handlePosterFile(file) {
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        showMovieError('Faqat rasm fayllarini yuklang (jpg, png, webp).', 'poster');
+        return;
+      }
+      if (file.size > LIMITS.POSTER_FILE) {
+        showMovieError('Poster hajmi 1.5 MB dan oshmasligi kerak.', 'poster');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        state.moviePosterUploadData = reader.result;
+        els.moviePosterFileName.textContent = `${file.name} (${Math.round(file.size / 1024)} KB)`;
+        setPosterPreview(reader.result);
+        updateMoviePreview();
+      };
+      reader.onerror = () => {
+        showMovieError('Poster faylini o‘qishda xatolik yuz berdi.', 'poster');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateMoviePreview() {
+      const title = els.movieTitle.value.trim() || 'Film nomi';
+      const genre = els.movieGenre.value.trim() || 'Janr aniqlanmagan';
+      const release = els.movieReleaseDate.value ? new Date(els.movieReleaseDate.value).toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Sana belgilanmagan';
+      const statusLabelMap = { Published: 'Bugun', Draft: 'Qoralama', Scheduled: 'Tez kunda' };
+      const statusLabel = statusLabelMap[els.movieStatus.value] ?? 'Holat aniqlanmagan';
+      const categoryLabel = getCategoryLabel(els.movieCategory.value || '') || 'Kategoriya belgilanmagan';
+      const synopsis = els.movieSynopsis.value.trim() || 'Sinopsis kiriting — foydalanuvchi film haqida bir qarashda tasavvurga ega bo‘lsin.';
+
+      const posterSrc = state.moviePosterUploadData || els.moviePoster.value.trim();
+      setPosterPreview(posterSrc);
+
+      els.moviePreviewTitle.textContent = title;
+      els.moviePreviewMeta.textContent = `${genre} • ${release} • ${categoryLabel} • ${statusLabel}`;
+      els.moviePreviewSynopsis.textContent = synopsis;
+      els.moviePreviewFeatured.hidden = !els.movieFeatured.checked;
+    }
+
+    function renderEngagement() {
+      els.engagementList.innerHTML = defaults.engagement.map(item => `
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-semibold">${item.title}</p>
+            <span class="text-xs text-slate-400">${item.progress}%</span>
+          </div>
+          <p class="text-xs text-slate-400">${item.description}</p>
+          <div class="w-full bg-slate-800/60 rounded-full h-2">
+            <div class="h-2 rounded-full bg-gradient-to-r from-primary to-secondary" style="width:${item.progress}%"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderMovies() {
+      const query = state.searchQuery?.toLowerCase() || '';
+      const filtered = state.movies.filter(movie => {
+        const matchesQuery = movie.title.toLowerCase().includes(query) || (movie.genre || '').toLowerCase().includes(query);
+        const matchesStatus = state.filters.status === 'all' ? true : movie.status === state.filters.status;
+        const matchesCategory = state.filters.category === 'all' ? true : movie.category === state.filters.category;
+        return matchesQuery && matchesStatus && matchesCategory;
+      });
+      const totalPages = Math.max(1, Math.ceil(filtered.length / state.perPage));
+      state.currentPage = Math.min(state.currentPage, totalPages);
+      const start = (state.currentPage - 1) * state.perPage;
+      const pageItems = filtered.slice(start, start + state.perPage);
+
+      if (els.movieCount) els.movieCount.textContent = `${filtered.length} ta film`;
+      if (els.paginationInfo) els.paginationInfo.textContent = `${state.currentPage}/${totalPages}`;
+      if (els.prevPage) els.prevPage.disabled = state.currentPage === 1;
+      if (els.nextPage) els.nextPage.disabled = state.currentPage === totalPages;
+
+      if (!els.movieTable) return;
+      els.movieTable.innerHTML = pageItems.map(movie => `
+        <tr class='hover:bg-slate-900/50 transition'>
+          <td class='px-6 py-4'>
+            <div class='flex items-center gap-3'>
+              <span class='w-12 h-12 rounded-xl overflow-hidden bg-primary/15 border border-slate-800 flex items-center justify-center'>
+                ${movie.poster ? `<img src='${movie.poster}' alt='Poster' class='w-full h-full object-cover'>` : `<i class='fa-solid fa-film text-primary'></i>`}
+              </span>
+              <div>
+                <p class='font-semibold text-slate-100'>${movie.title}</p>
+                <p class='text-xs text-slate-400 line-clamp-1'>${movie.genre || 'Janr kiritilmagan'}</p>
+                <div class='flex flex-wrap items-center gap-2 mt-1 text-[11px] text-slate-500'>
+                  ${movie.category ? `<span class='badge bg-slate-900/70 border border-slate-700'>${getCategoryLabel(movie.category)}</span>` : ''}
+                  ${movie.release_date ? `<span><i class='fa-solid fa-calendar'></i> ${movie.release_date}</span>` : ''}
+                </div>
+              </div>
+            </div>
+          </td>
+          <td class='px-6 py-4'>${movie.genre}</td>
+          <td class='px-6 py-4'><span class='badge bg-warning/15 text-warning border border-warning/40'><i class="fa-solid fa-star"></i>${movie.rating}</span></td>
+          <td class='px-6 py-4'>${statusBadge(movie.status)}</td>
+          <td class='px-6 py-4 text-slate-300'>${movie.updatedAt}</td>
+          <td class='px-6 py-4 text-right'>
+            <div class='inline-flex items-center gap-2'>
+              <button data-id='${movie.id}' class='editMovie px-3 py-1 rounded-lg border border-slate-700 text-xs'>Tahrirlash</button>
+              <button data-id='${movie.id}' class='deleteMovie px-3 py-1 rounded-lg border border-danger/40 text-danger text-xs'>O‘chirish</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function statusBadge(status) {
+      const classMap = {
+        Published: 'bg-success/10 text-success border border-success/30',
+        Draft: 'bg-warning/10 text-warning border border-warning/30',
+        Scheduled: 'bg-secondary/10 text-secondary border border-secondary/30'
+      };
+      const labelMap = { Published: 'Bugun', Draft: 'Qoralama', Scheduled: 'Tez kunda' };
+      return `<span class='status-pill ${classMap[status] ?? "bg-slate-700/60 text-slate-300 border border-slate-600/60"}'>${labelMap[status] ?? status}</span>`;
+    }
+
+    function autoAdjustStatus(payload) {
+      if (payload.release_date) {
+        const releaseDate = new Date(payload.release_date);
+        const now = new Date();
+        if (releaseDate > now && payload.status === 'Published') {
+          payload.status = 'Scheduled';
+        }
+      }
+      if (payload.status === 'Scheduled' && !payload.release_date) {
+        payload.release_date = new Date().toISOString().slice(0, 10);
+      }
+      return payload;
+    }
+
+    function renderUsers() {
+      if (!els.userList) return;
+      els.userList.innerHTML = '';
+      if (!defaults.users || !templates.user) return;
+      defaults.users.forEach(user => {
+        const node = templates.user.cloneNode(true);
+        node.querySelector('img').src = user.avatar;
+        node.querySelector('p').textContent = user.name;
+        node.querySelector('div.flex').innerHTML = `
+          <span class='badge bg-primary/15 text-primary border border-primary/20'><i class='fa-solid fa-crown'></i>${user.role}</span>
+          <span>${user.since} yildan</span>
+          ${user.activity.map(item => `<span>•</span><span>${item}</span>`).join('')}`;
+        els.userList.appendChild(node);
+      });
+    }
+
+    function renderReviews() {
+      if (!els.reviewList) return;
+      els.reviewList.innerHTML = '';
+      if (!defaults.reviews || !templates.review) return;
+      defaults.reviews.forEach(review => {
+        const node = templates.review.cloneNode(true);
+        node.querySelector('.font-semibold').textContent = review.user;
+        node.querySelector('.rating').textContent = review.rating;
+        node.querySelector('p').textContent = review.content;
+        node.querySelector('.movie').innerHTML = `<i class='fa-solid fa-film mr-1'></i>${review.movie}`;
+        node.querySelector('.date').textContent = review.date;
+        els.reviewList.appendChild(node);
+      });
+    }
+
+    function renderTasks() {
+      const cols = { todo: [], progress: [], review: [] };
+      state.tasks.forEach(task => {
+        const node = templates.task.cloneNode(true);
+        node.querySelector('p.font-semibold').textContent = task.title;
+        node.querySelector('p.text-sm').textContent = task.description || 'Tavsif kiritilmagan';
+        node.querySelector('.date').textContent = task.date;
+        const badge = node.querySelector('.badge');
+        const map = { High: 'bg-danger/15 text-danger border border-danger/30', Medium: 'bg-warning/15 text-warning border border-warning/30', Low: 'bg-success/15 text-success border border-success/30' };
+        badge.className = `badge ${map[task.priority] ?? ''}`;
+        badge.innerHTML = `<i class='fa-solid fa-flag'></i>${task.priority}`;
+        node.querySelector('.completeBtn').addEventListener('click', () => completeTask(task.id));
+        (cols[task.column] ?? cols.todo).push(node);
+      });
+      els.taskBoard.innerHTML = ['todo','progress','review'].map(key => {
+        const titles = { todo: 'Reja', progress: 'Jarayon', review: 'Tekshiruv' };
+        const color = { todo: 'bg-secondary', progress: 'bg-primary', review: 'bg-accent' };
+        const items = cols[key].length ? cols[key].map(node => node.cloneNode(true)) : [`<p class='text-xs text-slate-500 italic'>Vazifa yo‘q</p>`];
+        const wrapper = document.createElement('div');
+        wrapper.className = 'space-y-3';
+        wrapper.innerHTML = `<div class='flex items-center gap-2'><span class='w-2 h-2 rounded-full ${color[key]}'></span><h4 class='text-sm font-semibold'>${titles[key]}</h4></div>`;
+        const body = document.createElement('div');
+        body.className = 'space-y-3 min-h-[140px]';
+        cols[key].forEach(node => body.appendChild(node));
+        if (!cols[key].length) body.innerHTML = `<p class='text-xs text-slate-500 italic'>Vazifa yo‘q</p>`;
+        wrapper.appendChild(body);
+        return wrapper.outerHTML;
+      }).join('');
+    }
+
+    function renderLogs() {
+      els.logList.innerHTML = state.logs.map(log => `
+        <div class='glass rounded-xl px-4 py-3 flex items-center justify-between border border-slate-800/70'>
+          <div class='flex items-center gap-3'>
+            <span class='w-2 h-2 rounded-full ${log.type === 'success' ? 'bg-success' : log.type === 'warning' ? 'bg-accent' : 'bg-primary'}'></span>
+            <p>${log.message}</p>
+          </div>
+          <span class='text-slate-500'>${log.time}</span>
+        </div>
+      `).join('');
+    }
+
+    function initChart() {
+      const ctx = document.getElementById('trafficChart');
+      state.chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: generateLabels(30),
+          datasets: [
+            {
+              label: 'Tomoshabinlar',
+              data: generateTraffic(30),
+              borderColor: '#2563eb',
+              backgroundColor: 'rgba(37, 99, 235, 0.25)',
+              tension: 0.35,
+              fill: true,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+            y: { grid: { color: 'rgba(148,163,184,.15)' }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+    }
+
+    function updateChart(range) {
+      state.chart.data.labels = generateLabels(range);
+      state.chart.data.datasets[0].data = generateTraffic(range);
+      state.chart.update();
+    }
+
+    function generateLabels(days) {
+      return Array.from({ length: days }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (days - 1 - i));
+        return d.toLocaleDateString('uz-UZ', { day: '2-digit', month: 'short' });
+      });
+    }
+
+    function generateTraffic(days) {
+      const base = 1200;
+      return Array.from({ length: days }, () => Math.round(base + Math.random() * 600));
+    }
+
+    const ADMIN_MOVIE_FORM_URL = '{% url "cinemadia:admin_movie_form" %}';
+
+    function openMovieModal(id = null) {
+      const target = new URL(ADMIN_MOVIE_FORM_URL, window.location.origin);
+      if (id) {
+        target.searchParams.set('id', id);
+      }
+      window.location.href = target.toString();
+    }
+
+    function closeMovieModal() {
+      els.movieModal.classList.add('hidden');
+      els.movieModal.classList.remove('flex');
+      state.editingMovie = null;
+      resetPosterUpload();
+    }
+
+    function validateMoviePayload(payload) {
+      if (!payload.title?.trim()) {
+        showMovieError('Film nomi kiritilishi shart.', 'title');
+        return false;
+      }
+      if (!payload.genre?.trim()) {
+        showMovieError('Janr maydoni to‘ldirilishi kerak.', 'genre');
+        return false;
+      }
+      if (!payload.category) {
+        showMovieError('Kategoriya tanlang.', 'category');
+        return false;
+      }
+      if (payload.rating < 0 || payload.rating > 10) {
+        showMovieError('Reyting 0 va 10 oralig‘ida bo‘lishi kerak.', 'rating');
+        return false;
+      }
+      if (payload.synopsis && payload.synopsis.length < 40) {
+        showMovieError('Qisqacha mazmun kamida 40 ta belgidan iborat bo‘lishi kerak.', 'synopsis');
+        return false;
+      }
+      if (payload.synopsis && payload.synopsis.length > 320) {
+        showMovieError('Qisqacha mazmun 320 belgidan oshmasligi lozim.', 'synopsis');
+        return false;
+      }
+      if (!payload.poster) {
+        showMovieError('Poster URL kiritish yoki fayl yuklash zarur.', 'poster');
+        return false;
+      }
+      clearMovieErrors();
+      return true;
+    }
+
+    function handleMovieSubmit(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(els.movieForm).entries());
+      data.rating = parseFloatSafe(data.rating, 0).toFixed(1);
+      data.duration = parseIntSafe(data.duration, 0);
+      data.is_featured = els.movieFeatured.checked;
+      data.poster = data.poster?.trim() ?? '';
+      data.category = data.category || '';
+      data.updatedAt = new Date().toISOString().slice(0, 10);
+      if (state.moviePosterUploadData) {
+        data.poster = state.moviePosterUploadData;
+      }
+      if (!validateMoviePayload(data)) {
+        return;
+      }
+      autoAdjustStatus(data);
+      if (state.editingMovie) {
+        const index = state.movies.findIndex(movie => movie.id === state.editingMovie);
+        state.movies[index] = { ...state.movies[index], ...data };
+        log(`${data.title} filmi yangilandi`, 'success');
+        showToast({
+          title: 'Muvaffaqiyatli yangilandi',
+          message: `${data.title} ma’lumotlari yangi ko‘rinishda saqlandi.`,
+          type: 'success'
+        });
+      } else {
+        const payload = { id: crypto.randomUUID(), ...data };
+        state.movies.unshift(payload);
+        log(`${data.title} filmi qo‘shildi`, 'info');
+        showToast({
+          title: 'Film qo‘shildi',
+          message: `${data.title} repertuarga muvaffaqiyatli qo‘shildi.`,
+          type: 'success'
+        });
+      }
+      save(STORAGE_KEYS.MOVIES, state.movies);
+      closeMovieModal();
+      renderMovies();
+      resetPosterUpload();
+    }
+
+    function deleteMovie(id, title) {
+      if (!title) {
+        title = 'Bu film';
+      }
+      
+      if (confirm(`"${title}" filmni butunlay o'chirasizmi?\n\nBu amalni bekor qilib bo'lmaydi!`)) {
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                         document.querySelector('input[name="csrfmiddlewaretoken"]')?.value ||
+                         getCookie('csrftoken');
+        
+        if (!csrfToken) {
+          showToast({
+            title: 'Xatolik',
+            message: 'CSRF token topilmadi. Sahifani yangilang.',
+            type: 'error'
+          });
+          return;
+        }
+        
+        // Send DELETE request to server
+        fetch(`/admin-panel/movies/delete/${id}/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken,
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            showToast({
+              title: 'Muvaffaqiyatli o\'chirildi',
+              message: `"${title}" filmi butunlay o'chirildi.`,
+              type: 'success'
+            });
+            
+            // Reload page to update
+            setTimeout(() => location.reload(), 1000);
+          } else {
+            showToast({
+              title: 'Xatolik',
+              message: data.error || 'Film o\'chirishda xatolik yuz berdi',
+              type: 'error'
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Delete error:', error);
+          showToast({
+            title: 'Xatolik',
+            message: 'Serverga ulanishda xatolik: ' + error.message,
+            type: 'error'
+          });
+        });
+      }
+    }
+    
+    // Helper function to get CSRF token from cookie
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
+
+    function openTaskModal() {
+      els.taskModal.classList.remove('hidden');
+      els.taskModal.classList.add('flex');
+      els.taskForm.reset();
+    }
+
+    function closeTaskModal() {
+      els.taskModal.classList.add('hidden');
+      els.taskModal.classList.remove('flex');
+    }
+
+    function handleTaskSubmit(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(els.taskForm).entries());
+      const task = {
+        id: crypto.randomUUID(),
+        title: data.title,
+        description: data.description,
+        priority: data.priority,
+        date: new Date().toLocaleDateString('uz-UZ'),
+        column: 'todo'
+      };
+      state.tasks.unshift(task);
+      save(STORAGE_KEYS.TASKS, state.tasks);
+      renderTasks();
+      closeTaskModal();
+      log(`${task.title} vazifa qo‘shildi`, 'info');
+    }
+
+    function completeTask(id) {
+      const task = state.tasks.find(item => item.id === id);
+      if (!task) return;
+      state.tasks = state.tasks.filter(item => item.id !== id);
+      save(STORAGE_KEYS.TASKS, state.tasks);
+      renderTasks();
+      log(`${task.title} bajarildi`, 'success');
+    }
+
+    function log(message, type = 'info') {
+      const entry = { message, type, time: new Date().toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' }) };
+      state.logs.unshift(entry);
+      state.logs = state.logs.slice(0, 15);
+      save(STORAGE_KEYS.LOGS, state.logs);
+      renderLogs();
+    }
+
+    function exportUsersCSV() {
+      const header = ['Ism', 'Rol', 'Yil', 'Faollik'].join(',');
+      const rows = defaults.users.map(u => [u.name, u.role, u.since, u.activity.join(' | ')].join(','));
+      const csv = [header, ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'cinemadia_users.csv';
+      link.click();
+      URL.revokeObjectURL(url);
+      log('Foydalanuvchilar CSV eksport qilindi', 'info');
+    }
+
+    function changeTheme(theme) {
+      state.settings.theme = theme;
+      applyTheme();
+      save(STORAGE_KEYS.SETTINGS, state.settings);
+    }
+
+    function applyTheme() {
+      document.body.dataset.theme = state.settings.theme;
+      document.body.classList.toggle('bg-slate-100', state.settings.theme === 'light');
+      els.themeButtons.forEach(btn => btn.classList.toggle('ring-2', btn.dataset.theme === state.settings.theme));
+      if (state.settings.theme === 'light') {
+        document.body.style.background = '#f8fafc';
+        document.body.style.color = '#0f172a';
+      } else if (state.settings.theme === 'dim') {
+        document.body.style.background = '#111827';
+        document.body.style.color = '#e2e8f0';
+      } else {
+        document.body.style.background = 'radial-gradient(circle at top, rgba(37,99,235,.08), transparent 52%), linear-gradient(160deg,#0b1220 0%, #101935 35%, #050b1f 100%)';
+        document.body.style.color = '#e2e8f0';
+      }
+    }
+
+    function applyLanguage() {
+      els.languageSelect.value = state.settings.language;
+      els.settingsLanguage.value = state.settings.language;
+    }
+
+    function saveSettings() {
+      state.settings.language = els.settingsLanguage.value;
+      state.settings.notifications = {
+        newUser: els.settingsLanguage.closest('section').querySelectorAll('input[type="checkbox"]')[0].checked,
+        comments: els.settingsLanguage.closest('section').querySelectorAll('input[type="checkbox"]')[1].checked,
+        system: els.settingsLanguage.closest('section').querySelectorAll('input[type="checkbox"]')[2].checked
+      };
+      save(STORAGE_KEYS.SETTINGS, state.settings);
+      log('Sozlamalar saqlandi', 'success');
+    }
+
+    function clearLogs() {
+      state.logs = [];
+      save(STORAGE_KEYS.LOGS, state.logs);
+      renderLogs();
+      log('Loglar tozalandi', 'warning');
+    }
+
+    function initListeners() {
+      // Pagination (optional elements)
+      if (els.prevPage) els.prevPage.addEventListener('click', () => { state.currentPage = Math.max(1, state.currentPage - 1); renderMovies(); });
+      if (els.nextPage) els.nextPage.addEventListener('click', () => { state.currentPage += 1; renderMovies(); });
+      
+      // Search
+      if (els.movieSearch) els.movieSearch.addEventListener('input', e => { state.searchQuery = e.target.value; state.currentPage = 1; renderMovies(); });
+      
+      // Movie table actions
+      if (els.movieTable) {
+        els.movieTable.addEventListener('click', e => {
+          if (e.target.classList.contains('deleteMovie')) deleteMovie(e.target.dataset.id);
+          if (e.target.classList.contains('editMovie')) openMovieModal(e.target.dataset.id);
+        });
+      }
+      
+      // Open movie modal buttons
+      [els.openMovieModal, els.openMovieModalSecondary].forEach(btn => btn?.addEventListener('click', () => openMovieModal()));
+      
+      // Movie form fields (optional - only for modal)
+      if (els.moviePoster) els.moviePoster.addEventListener('input', () => {
+        state.moviePosterUploadData = null;
+        if (els.moviePosterFile) {
+          els.moviePosterFile.value = '';
+        }
+        els.moviePosterFileName.textContent = 'Maks: 1.5MB, jpg/png/webp.';
+        setPosterPreview(els.moviePoster.value.trim());
+        updateMoviePreview();
+      });
+      if (els.moviePosterUploadBtn) els.moviePosterUploadBtn.addEventListener('click', () => els.moviePosterFile?.click());
+      if (els.moviePosterFile) els.moviePosterFile.addEventListener('change', e => {
+        clearMovieErrors();
+        const [file] = e.target.files;
+        handlePosterFile(file);
+      });
+      if (els.movieTitle) {
+        els.movieTitle.addEventListener('input', () => {
+          let value = els.movieTitle.value;
+          value = value.replace(/^\s+/, '');
+          value = value.replace(/\s{2,}/g, ' ');
+          els.movieTitle.value = value;
+          updateMoviePreview();
+        });
+        els.movieTitle.addEventListener('blur', () => {
+          els.movieTitle.value = els.movieTitle.value.trim();
+        });
+      }
+      [els.movieCategory, els.movieGenre, els.movieReleaseDate, els.movieStatus, els.movieSynopsis].forEach(field => {
+        if (field) field.addEventListener('input', updateMoviePreview);
+      });
+      if (els.movieFeatured) els.movieFeatured.addEventListener('change', updateMoviePreview);
+      if (els.movieSynopsis && els.synopsisCounter) {
+        els.movieSynopsis.addEventListener('input', () => {
+          const length = els.movieSynopsis.value.length;
+          els.synopsisCounter.textContent = `${length}/320`;
+          if (length > 320) {
+            els.synopsisCounter.classList.add('text-danger');
+          } else {
+            els.synopsisCounter.classList.remove('text-danger');
+          }
+        });
+      }
+      if (els.movieReleaseDate) {
+        els.movieReleaseDate.addEventListener('change', () => {
+          if (els.movieReleaseDate.value) {
+            const selected = new Date(els.movieReleaseDate.value);
+            const today = new Date();
+            if (selected > today && els.movieStatus) {
+              els.movieStatus.value = 'Scheduled';
+            }
+          }
+          updateMoviePreview();
+        });
+      }
+      
+      // Task management
+      if (els.addTaskBtn) els.addTaskBtn.addEventListener('click', openTaskModal);
+      if (els.closeTaskModal) els.closeTaskModal.addEventListener('click', closeTaskModal);
+      if (els.taskModal) els.taskModal.addEventListener('click', e => { if (e.target === els.taskModal) closeTaskModal(); });
+      if (els.taskForm) els.taskForm.addEventListener('submit', handleTaskSubmit);
+      if (els.resetTaskForm) els.resetTaskForm.addEventListener('click', () => els.taskForm.reset());
+      
+      // Settings
+      if (els.darkToggle) els.darkToggle.addEventListener('change', () => changeTheme(els.darkToggle.checked ? 'dark' : 'light'));
+      if (els.languageSelect) els.languageSelect.addEventListener('change', e => { state.settings.language = e.target.value; save(STORAGE_KEYS.SETTINGS, state.settings); });
+      if (els.settingsLanguage) els.settingsLanguage.addEventListener('change', e => { state.settings.language = e.target.value; if (els.languageSelect) els.languageSelect.value = e.target.value; save(STORAGE_KEYS.SETTINGS, state.settings); });
+      if (els.saveSettings) els.saveSettings.addEventListener('click', saveSettings);
+      if (els.clearLogs) els.clearLogs.addEventListener('click', clearLogs);
+      if (els.chartRange) els.chartRange.addEventListener('change', e => updateChart(parseInt(e.target.value, 10)));
+      
+      // Export users
+      const exportBtn = document.getElementById('exportUsers');
+      if (exportBtn) exportBtn.addEventListener('click', exportUsersCSV);
+      
+      // Global keyboard shortcuts
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMovieModal(); closeTaskModal(); } });
+      
+      // Theme buttons
+      if (els.themeButtons) els.themeButtons.forEach(btn => btn.addEventListener('click', () => changeTheme(btn.dataset.theme)));
+      
+      // Navigation links
+      document.querySelectorAll('a.nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+          document.querySelectorAll('a.nav-link').forEach(l => l.classList.remove('active'));
+          link.classList.add('active');
+        });
+      });
+    }
+
+    function init() {
+      populateCategories();
+      renderEngagement();
+      renderMovies();
+      renderUsers();
+      renderReviews();
+      renderTasks();
+      renderLogs();
+      initChart();
+      initListeners();
+      applyTheme();
+      applyLanguage();
+      els.footerYear.textContent = new Date().getFullYear();
+    }
+
+    init();
+  </script>
+</body>
+</html>

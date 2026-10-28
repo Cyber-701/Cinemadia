@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Cinemadia - Profil sahifasi">
+    <title>👤 Profil - Cinemadia</title>
+    
+    <!-- External CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #8b5cf6;
+            --primary-dark: #7c3aed;
+            --secondary: #ec4899;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-main: #0a0e27;
+            --bg-card: #141829;
+            --bg-hover: #1e2139;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --border: #1f2937;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, var(--bg-main) 0%, #050817 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        body:before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-bottom: 30px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .profile-avatar-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .avatar-large {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            margin: 0 auto 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .avatar-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 14px;
+            border-radius: 6px;
+        }
+
+        .btn-sm i {
+            margin-right: 5px;
+        }
+
+        .avatar-large:after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            z-index: -1;
+            filter: blur(20px);
+            opacity: 0.5;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 900;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .profile-email {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--bg-hover);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            margin-top: 20px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--bg-main);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(139, 92, 246, 0.5);
+        }
+
+        .btn-secondary {
+            background: var(--bg-hover);
+            border: 2px solid var(--border);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-main);
+            border-color: var(--primary);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.5);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .message {
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .message-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .message-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .info-value {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 968px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 20px 15px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .avatar-large {
+                width: 120px;
+                height: 120px;
+                font-size: 36px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'cinemadia:home' %}" class="back-link">
+            <i class="fas fa-arrow-left"></i> Bosh sahifaga qaytish
+        </a>
+
+        <div class="profile-grid">
+            <!-- LEFT: Profile Info -->
+            <div class="card">
+                <div class="profile-avatar-section">
+                    <div class="avatar-large" id="userAvatar">
+                        {% if user.is_authenticated %}
+                            {% if user.profile.avatar %}
+                                <img src="{{ user.profile.avatar.url }}" alt="Profile Picture" class="avatar-image">
+                            {% else %}
+                                {{ user.email.0|upper }}
+                            {% endif %}
+                        {% else %}
+                            ?
+                        {% endif %}
+                    </div>
+                    <div class="avatar-upload" style="margin-top: 15px;">
+                        <form method="post" enctype="multipart/form-data" id="avatarForm">
+                            {% csrf_token %}
+                            <label for="id_avatar" class="btn btn-sm">
+                                <i class="fas fa-camera"></i> Rasm yuklash
+                            </label>
+                            <input type="file" name="avatar" id="id_avatar" accept="image/*" style="display: none;" onchange="document.getElementById('avatarForm').submit()">
+                        </form>
+                    </div>
+                    <h1 id="userName">
+                        {% if user.is_authenticated %}
+                            {{ user.username|title }}
+                        {% else %}
+                            Mehmon
+                        {% endif %}
+                    </h1>
+                    <div class="profile-email" id="userEmail">
+                        {% if user.is_authenticated %}
+                            <i class="fas fa-envelope"></i> {{ user.email }}
+                        {% else %}
+                            Tizimga kiritilmagan
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">24</div>
+                        <div class="stat-label">Ko'rilgan</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">Sevimlilar</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">8</div>
+                        <div class="stat-label">Sharhlar</div>
+                    </div>
+                </div>
+
+                {% if user.is_authenticated %}
+                <div class="actions">
+                    <button class="btn" id="editBtn">
+                        <i class="fas fa-edit"></i> Tahrirlash
+                    </button>
+                    <a href="{% url 'cinemadia:logout' %}" class="btn btn-danger">
+                        <i class="fas fa-sign-out-alt"></i> Chiqish
+                    </a>
+                </div>
+                {% else %}
+                <div class="actions">
+                    <a href="{% url 'cinemadia:login' %}" class="btn">
+                        <i class="fas fa-sign-in-alt"></i> Kirish
+                    </a>
+                    <a href="{% url 'cinemadia:login' %}" class="btn btn-secondary">
+                        <i class="fas fa-user-plus"></i> Ro'yxatdan o'tish
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- RIGHT: Profile Details -->
+            <div>
+                <div class="card">
+                    <h2 class="section-title">
+                        <i class="fas fa-user-circle"></i> Shaxsiy Ma'lumotlar
+                    </h2>
+
+                    {% if user.is_authenticated %}
+                    <div id="viewMode">
+                        <div class="info-row">
+                            <span class="info-label">To'liq ism</span>
+                            <span class="info-value">{{ user.get_full_name|default:user.username }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ user.email }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Ro'yxatdan o'tgan</span>
+                            <span class="info-value">{{ user.date_joined|date:"d M, Y" }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Oxirgi kirish</span>
+                            <span class="info-value">{{ user.last_login|date:"d M, Y H:i"|default:"Hech qachon" }}</span>
+                        </div>
+                    </div>
+
+                    <div id="editMode" class="hidden">
+                        <form method="post">
+                            {% csrf_token %}
+                            <label for="firstName">
+                                <i class="fas fa-user"></i> Ism
+                            </label>
+                            <input type="text" id="firstName" value="{{ user.first_name }}" placeholder="Ismingiz">
+
+                            <label for="lastName">
+                                <i class="fas fa-user"></i> Familiya
+                            </label>
+                            <input type="text" id="lastName" value="{{ user.last_name }}" placeholder="Familiyangiz">
+
+                            <label for="bio">
+                                <i class="fas fa-align-left"></i> Haqimda
+                            </label>
+                            <textarea id="bio" placeholder="O'zingiz haqingizda yozing..."></textarea>
+
+                            <div class="actions">
+                                <button type="submit" class="btn">
+                                    <i class="fas fa-save"></i> Saqlash
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="cancelBtn">
+                                    <i class="fas fa-times"></i> Bekor qilish
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div style="text-align: center; padding: 40px 20px;">
+                        <i class="fas fa-user-slash" style="font-size: 48px; color: var(--text-secondary); margin-bottom: 20px;"></i>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                            Profilingizni ko'rish uchun tizimga kiring
+                        </p>
+                        <a href="{% url 'cinemadia:login' %}" class="btn">
+                            <i class="fas fa-sign-in-alt"></i> Kirish
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if user.is_authenticated %}
+                <div class="card" style="margin-top: 30px;">
+                    <h2 class="section-title">
+                        <i class="fas fa-heart"></i> Sevimli Filmlar
+                    </h2>
+                    <p style="color: var(--text-secondary); text-align: center; padding: 40px 20px;">
+                        Hozircha sevimli filmlar yo'q
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Edit mode toggle
+        const editBtn = document.getElementById('editBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const viewMode = document.getElementById('viewMode');
+        const editMode = document.getElementById('editMode');
+
+        if (editBtn && cancelBtn && viewMode && editMode) {
+            editBtn.addEventListener('click', () => {
+                viewMode.classList.add('hidden');
+                editMode.classList.remove('hidden');
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                editMode.classList.add('hidden');
+                viewMode.classList.remove('hidden');
+            });
+        }
+
+        // Console message
+        console.log('%c🎬 CINEMADIA PROFILE', 'color: #8b5cf6; font-size: 24px; font-weight: bold;');
+        console.log('%cProfilingizni boshqaring', 'color: #ec4899; font-size: 14px;');
+    </script>
+</body>
+</html>

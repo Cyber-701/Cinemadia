@@ -1,0 +1,140 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% block title %}Admin · Overview{% endblock title %}
+
+{% block header %}
+<header class="glass rounded-3xl px-6 py-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between shadow-glow">
+  <div>
+    <p class="text-sm text-slate-400">Assalomu alaykum, Admin!</p>
+    <h2 class="text-2xl lg:text-3xl font-bold">Boshqaruv paneliga xush kelibsiz 🎬</h2>
+  </div>
+  <div class="flex flex-wrap items-center gap-3">
+    <label class="relative inline-flex items-center cursor-pointer">
+      <input id="darkToggle" type="checkbox" class="sr-only" checked>
+      <span class="w-12 h-6 rounded-full bg-slate-700 peer-checked:bg-primary transition relative">
+        <span class="absolute top-[2px] left-[2px] w-5 h-5 rounded-full bg-white transition peer-checked:translate-x-6"></span>
+      </span>
+    </label>
+    <select id="languageSelect" class="bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-sm">
+      <option value="uz">O‘zbekcha</option>
+      <option value="ru">Русский</option>
+      <option value="en">English</option>
+    </select>
+  </div>
+</header>
+{% endblock header %}
+
+{% block content %}
+<section id="overview" class="space-y-5">
+  <div class="flex items-center justify-between">
+    <h3 class="text-lg font-semibold">Umumiy ko‘rsatkichlar</h3>
+    <span class="text-xs text-slate-400">Oxirgi yangilanish: {{ last_update|default:now }}</span>
+  </div>
+  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    {% for card in stats_cards %}
+      <div class="glass rounded-2xl p-5 space-y-3 shadow hover:-translate-y-1 transition">
+        <div class="flex items-center justify-between">
+          <div class="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center text-lg">{{ card.icon }}</div>
+          <span class="badge bg-secondary/10 text-secondary border border-secondary/30"><i class="fa-solid fa-chart-pie"></i>{{ card.value }}</span>
+        </div>
+        <p class="text-xs text-slate-400">{{ card.label }}</p>
+        <p class="text-2xl font-semibold text-white">{{ card.value }}</p>
+      </div>
+    {% empty %}
+      <p class="text-xs text-slate-500">Hozircha statistik ma’lumot topilmadi.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="grid gap-6 xl:grid-cols-3">
+  <div class="glass rounded-3xl p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <h4 class="font-semibold">Top toifalar</h4>
+      <span class="text-xs text-slate-400">Top 5</span>
+    </div>
+    <ul class="space-y-3 text-sm">
+      {% for category in top_categories %}
+        <li class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-primary/15 text-primary flex items-center justify-center font-semibold">{{ forloop.counter }}</span>
+            <div>
+              <p class="font-medium text-slate-100">{{ category.label }}</p>
+              <p class="text-xs text-slate-500 uppercase tracking-widest">{{ category.key }}</p>
+            </div>
+          </div>
+          <span class="badge bg-slate-900/60 border border-slate-700">{{ category.count }} ta</span>
+        </li>
+      {% empty %}
+        <li class="text-xs text-slate-500">Toifalar bo‘yicha ma’lumot topilmadi.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="glass rounded-3xl p-6 space-y-4">
+    <div class="flex items-center justify-between">
+      <h4 class="font-semibold">Yangi qo‘shilgan filmlar</h4>
+      <a href="{% url 'cinemadia:home' %}" class="text-xs text-primary hover:text-secondary transition">Barchasini ko‘rish</a>
+    </div>
+    <ul class="space-y-3 text-sm">
+      {% for movie in latest_movies %}
+        <li class="flex items-center justify-between gap-3">
+          <div class="flex-1">
+            <a href="{% url 'cinemadia:movie_detail' slug=movie.slug %}" class="font-semibold text-slate-100 hover:text-primary transition">{{ movie.title }}</a>
+            <p class="text-xs text-slate-500 flex items-center gap-2 mt-1">
+              <span class="flex items-center gap-1"><i class="fa-solid fa-clapperboard"></i>{{ movie.get_category_display|default:'Noma’lum' }}</span>
+              <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+              <span>{{ movie.created_at|date:"d M, Y" }}</span>
+            </p>
+          </div>
+          <span class="badge bg-warning/10 text-warning border border-warning/30"><i class="fa-solid fa-star"></i>{{ movie.rating|default:'–'|floatformat:1 }}</span>
+        </li>
+      {% empty %}
+        <li class="text-xs text-slate-500">Yangi filmlar hozircha yo‘q.</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  <div class="space-y-4">
+    <div class="glass rounded-3xl p-6 space-y-4">
+      <div>
+        <p class="text-xs uppercase tracking-[0.35em] text-slate-500">Platforma ko‘rsatkichi</p>
+        <p class="text-3xl font-semibold text-white">{% if average_rating %}{{ average_rating|floatformat:1 }}{% else %}—{% endif %}</p>
+        <p class="text-xs text-slate-400">Filmlar o‘rtacha reytingi</p>
+      </div>
+      <div class="grid grid-cols-3 gap-3 text-xs">
+        <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3 text-center">
+          <p class="text-slate-400">Sevimlilar</p>
+          <p class="text-lg font-semibold text-white">{{ engagement_stats.favorites|default:0 }}</p>
+        </div>
+        <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3 text-center">
+          <p class="text-slate-400">Ko‘rish ro‘yxati</p>
+          <p class="text-lg font-semibold text-white">{{ engagement_stats.watchlists|default:0 }}</p>
+        </div>
+        <div class="rounded-2xl bg-slate-900/70 border border-slate-800 p-3 text-center">
+          <p class="text-slate-400">Tarix</p>
+          <p class="text-lg font-semibold text-white">{{ engagement_stats.history|default:0 }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="glass rounded-3xl p-6 space-y-4">
+      <div class="flex items-center justify-between">
+        <h4 class="font-semibold">Eng yuqori reytinglar</h4>
+        <span class="text-xs text-slate-400">Top 6</span>
+      </div>
+      <ul class="space-y-3 text-sm">
+        {% for movie in top_rated_movies %}
+          <li class="flex items-center justify-between gap-3">
+            <div>
+              <a href="{% url 'cinemadia:movie_detail' slug=movie.slug %}" class="font-semibold text-slate-100 hover:text-secondary transition">{{ movie.title }}</a>
+              <p class="text-xs text-slate-500 mt-1">{{ movie.genre|default:'—' }}</p>
+            </div>
+            <span class="badge bg-success/10 text-success border border-success/30"><i class="fa-solid fa-star"></i>{{ movie.rating|default:'–'|floatformat:1 }}</span>
+          </li>
+        {% empty %}
+          <li class="text-xs text-slate-500">Reyting ma’lumotlari hozircha yo‘q.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+{% endblock content %}

@@ -1,0 +1,53 @@
+{% extends 'base_with_nav.html' %}
+
+{% block title %}Tarjima kinolar - Cinemadia{% endblock %}
+
+{% block extra_css %}
+        .page-title { font-size: clamp(18px, 2.2vw, 32px); font-weight: 900; margin: 10px 0 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+        .card { background:#141829; border:1px solid #1f2937; border-radius:14px; overflow:hidden; text-decoration:none; color:inherit; transition: transform .2s ease, box-shadow .2s ease; }
+        .card:hover { transform: translateY(-6px); box-shadow:0 12px 30px rgba(139,92,246,.25); border-color:#8b5cf6; }
+        .poster { width:100%; height:clamp(220px, 28vw, 320px); object-fit:cover; display:block; }
+        .body { padding:12px 14px; }
+        .title { font-size:14px; font-weight:800; margin:0 0 6px; }
+        .meta { font-size:12px; color:#9ca3af; }
+        .topbar { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+        .back { color:#9ca3af; text-decoration:none; font-weight:700; }
+        .back:hover { color:#fff; }
+        .count { color:#9ca3af; font-size:14px; }
+        .pagination { display:flex; gap:8px; justify-content:center; margin:20px 0; }
+        .page-link { padding:8px 12px; border-radius:10px; background:#1e2139; color:#fff; text-decoration:none; border:1px solid #2b2f4a; font-weight:700; }
+        .page-link[aria-current="page"] { background:#8b5cf6; border-color:#8b5cf6; }
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <h1 class="page-title">🎬 Tarjima kinolar</h1>
+
+    <div class="grid">
+      {% for movie in movies %}
+        <a class="card" href="{% url 'cinemadia:movie_detail' movie.slug %}">
+          <img class="poster" src="{{ movie.get_poster }}" alt="{{ movie.title }}">
+          <div class="body">
+            <div class="title">{{ movie.title }}</div>
+            <div class="meta"><i class="fas fa-calendar"></i> {{ movie.year }} &nbsp; • &nbsp; <i class="fas fa-star"></i> {{ movie.rating }}</div>
+          </div>
+        </a>
+      {% empty %}
+        <p style="color:#9ca3af">Hozircha tarjima kinolar yo'q.</p>
+      {% endfor %}
+    </div>
+
+    {% if movies.has_other_pages %}
+    <div class="pagination">
+      {% if movies.has_previous %}
+        <a class="page-link" href="?page={{ movies.previous_page_number }}">Oldingi</a>
+      {% endif %}
+      <span class="page-link" aria-current="page">{{ movies.number }} / {{ movies.paginator.num_pages }}</span>
+      {% if movies.has_next %}
+        <a class="page-link" href="?page={{ movies.next_page_number }}">Keyingi</a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+{% endblock %}
